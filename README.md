@@ -2,7 +2,9 @@
 
 Before Running the Project Add the .env.local file 
 
-TO Run The Project :- npm run dev
+To Run The Project :- npm run dev
+
+
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
