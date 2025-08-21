@@ -12,10 +12,10 @@ const Header = () => {
 
   return (
     <header
-      className={cn("w-full border-b duration-150 transition-all ease-in-out")}
+      className={cn("w-full bg-gradient-to-r from-blue-50 to-indigo-100 shadow-md  duration-150 transition-all ease-in-out")}
     >
       <Container>
-        <div className="flex items-center gap-4 w-full">
+        <div className="flex items-center gap-4 w-full py-1 px-2">
           {/* logo section */}
           <LogoContainer />
           {/* navigation section */}
@@ -24,17 +24,20 @@ const Header = () => {
             {/* if the user is authenticated then display the protected routes */}
             {userId && (
               <NavLink 
-            to={"/generate"} 
-            className={({isActive}) => 
-                cn("text-base text-neutral-600", 
-                    isActive && "text-neutral-900 font-semibold")}>
-                        Take An Interview
-                    </NavLink>
+                to={"/generate"} 
+                className={({isActive}) => 
+                  cn(
+                    "text-base text-neutral-600 transition-colors duration-200 hover:text-indigo-900 hover:bg-indigo-100 hover:rounded-lg px-3 py-1",
+                    isActive && "text-neutral-900 font-semibold"
+                  )}
+              >
+                Take An Interview
+              </NavLink>
             )}
           </nav>
           <div className="ml-auto flex items-center gap-6">
             {/* Profile Section */}
-            <ProfileContainer />
+            <ProfileContainer  />
             {/* mobile toggle section */}
             <ToggleContainer/>
           </div>
