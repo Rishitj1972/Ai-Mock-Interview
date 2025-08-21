@@ -1,0 +1,11 @@
+ Why do we need different layouts?
+
+In most real apps you have different types of pages:
+
+Public pages (like Home, About, Contact, Login) → same header/footer, visible to everyone.
+
+Protected pages (like Dashboard, Profile, Settings) → visible only when signed in, usually with a sidebar or different navigation.
+
+Authorization pages (like Login, Register, Forgot Password) → often minimal layout, without the main header/footer.
+
+Instead of repeating headers/footers everywhere, we wrap them in layouts.
