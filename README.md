@@ -1,9 +1,12 @@
 # React + TypeScript + Vite
 
-Before Running the Project Add the .env.local file include clerk and firebase configuration settings
+```
+npm install
 
-To Run The Project :- npm run dev
+Add the .env.local file including clerk and firebase configuration settings.
 
+Run The Project :- npm run dev
+```
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
