@@ -1,5 +1,6 @@
 import type { FieldValue, Timestamp } from "firebase/firestore";
 
+// User Type For Firestore 
 export interface User {
     id: string;
     name: string;
@@ -9,4 +10,15 @@ export interface User {
     updatedAt: Timestamp | FieldValue;
 }
 
-// User Type For Firestore 
+
+// Interview Type For Firestore
+export interface Interview {
+    id: string;
+    position: string;
+    description: string;
+    experience: number;
+    userId: string;
+    techStack: string;
+    questions: {questions: string; answer: string}[];
+    updateAt: Timestamp;
+}
