@@ -19,7 +19,7 @@ const App = () => {
       {/* Public Route */}
       <Route element={<PublicLayout/>}>
         <Route index element={<HomePage/>}/>
-  <Route path="about" element={<AboutPage/>}/>
+        <Route path="about" element={<AboutPage/>}/>
       </Route>
 
       {/* Authentication Layout */}
