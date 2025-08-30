@@ -10,6 +10,8 @@ import Generate from "./components/generate";
 import Dashboard from "./routes/dashboard";
 import CreateEditPage from "./routes/create-edit-page";
 
+import AboutPage from "./routes/about";
+
 const App = () => {
  return (
   <Router>
@@ -17,6 +19,7 @@ const App = () => {
       {/* Public Route */}
       <Route element={<PublicLayout/>}>
         <Route index element={<HomePage/>}/>
+  <Route path="about" element={<AboutPage/>}/>
       </Route>
 
       {/* Authentication Layout */}
