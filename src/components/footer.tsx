@@ -2,7 +2,7 @@
 
 const Footer = () => {
   return (
-    <footer className="bg-white/80 py-6 mt-auto shadow-inner">
+    <footer className="bg-gradient-to-r from-blue-50 to-indigo-100 py-6 mt-auto shadow-inner">
       <div className="flex flex-col md:flex-row items-center justify-center gap-6">
         <a href="/" className="text-indigo-600 hover:underline">Home</a>
         <a href="#about" className="text-indigo-600 hover:underline">About</a>
