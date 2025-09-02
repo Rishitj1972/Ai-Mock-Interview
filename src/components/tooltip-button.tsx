@@ -44,7 +44,7 @@ export const TooltipButton = ({
       <Tooltip>
         <TooltipTrigger
           className={disbaled ? "cursor-not-allowed" : "cursor-pointer"}
-        >
+        asChild>
           <Button
             size={"icon"}
             disabled={disbaled}

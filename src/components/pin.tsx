@@ -35,7 +35,7 @@ const InterviewPin = ({ interview, onMockPage = false }: InterviewPinProps) => {
       <CardDescription>{interview?.description}</CardDescription>
 
       <div className="w-full items-center gap-2 flex flex-wrap">
-        {interview.techStack.split(",").map((word, index) => (
+        {interview?.techStack.split(",").map((word, index) => (
           <Badge
             key={index}
             variant={"outline"}
@@ -68,7 +68,7 @@ const InterviewPin = ({ interview, onMockPage = false }: InterviewPinProps) => {
                 content="View"
                 buttonVariant={"ghost"}
                 onClick={() => {
-                    navigate(`/generate/${interview.id}`,{ replace : true});
+                    navigate(`/generate/${interview?.id}`,{ replace : true});
                 }}
                 disbaled={false}
                 buttonClassName="hover:text-sky-500"
@@ -80,7 +80,7 @@ const InterviewPin = ({ interview, onMockPage = false }: InterviewPinProps) => {
                 content="Feedback"
                 buttonVariant={"ghost"}
                 onClick={() => {
-                    navigate(`/generate/feedback/${interview.id}`,{ replace : true});
+                    navigate(`/generate/feedback/${interview?.id}`,{ replace : true});
                 }}
                 disbaled={false}
                 buttonClassName="hover:text-sky-500"
@@ -92,7 +92,7 @@ const InterviewPin = ({ interview, onMockPage = false }: InterviewPinProps) => {
                 content="Start"
                 buttonVariant={"ghost"}
                 onClick={() => {
-                    navigate(`/generate/interview/${interview.id}`,{ replace : true});
+                    navigate(`/generate/interview/${interview?.id}`,{ replace : true});
                 }}
                 disbaled={false}
                 buttonClassName="hover:text-sky-500"
