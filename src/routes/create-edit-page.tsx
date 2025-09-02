@@ -15,7 +15,7 @@ const CreateEditPage = () => {
         if (interviewId) {
         const interviewDoc = await getDoc(doc(db,"interviews",interviewId)); // fetching the interview from firestore
         if(interviewDoc.exists()) {
-            setInterview({...interviewDoc.data()} as Interview) // setting the interview data to state
+            setInterview({id : interviewDoc.id,...interviewDoc.data()} as Interview) // setting the interview data to state
         }
       }
       } catch (error) {
