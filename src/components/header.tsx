@@ -34,6 +34,15 @@ const Header = () => {
                 Take An Interview
               </NavLink>
             )}
+            { userId && (<NavLink 
+                to="/cv-review" 
+                className={({ isActive }) => 
+                  cn("text-base text-neutral-600 flex items-center gap-2", 
+                      isActive && "text-neutral-900 font-semibold")
+                }>
+                CV Review
+              </NavLink>
+            )}
           </nav>
           <div className="ml-auto flex items-center gap-6">
             {/* Profile Section */}

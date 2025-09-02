@@ -1,3 +1,5 @@
+
+
 export const MainRoutes = [
     {
         label : "Home",
@@ -14,5 +16,5 @@ export const MainRoutes = [
     {
         label: "Services",
         path: "/services",
-    },
+    }
 ]; 

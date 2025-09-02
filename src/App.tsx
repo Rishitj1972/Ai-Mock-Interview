@@ -9,8 +9,8 @@ import { MainLayout } from "./layouts/main-layout";
 import Generate from "./components/generate";
 import Dashboard from "./routes/dashboard";
 import CreateEditPage from "./routes/create-edit-page";
-
 import AboutPage from "./routes/about";
+import CVReviewPage from "@/routes/cv-review";
 
 const App = () => {
  return (
@@ -28,16 +28,15 @@ const App = () => {
         <Route path="/signup/*" element={<SignUpPage/>}/>
       </Route>
 
-      {/* Protected ROute */}
-      <Route element={<ProtectedRoutes>
-        <MainLayout/> 
-      </ProtectedRoutes>}>
-
-      {/* add all the protected routes */} 
-      <Route element={<Generate/>} path="/generate"> 
-        <Route index element={<Dashboard/>}/>
-        <Route path=":interviewId" element={<CreateEditPage/>}/>
-      </Route>
+      {/* Protected Routes */}
+      <Route element={<ProtectedRoutes><MainLayout/></ProtectedRoutes>}>
+        {/* Generate routes */}
+        <Route element={<Generate/>} path="/generate"> 
+          <Route index element={<Dashboard/>}/>
+          <Route path=":interviewId" element={<CreateEditPage/>}/>
+        </Route>
+        
+        <Route path="/cv-review" element={<CVReviewPage />} />
       </Route>
 
     </Routes>
