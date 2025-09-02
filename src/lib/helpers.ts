@@ -6,7 +6,7 @@ export const MainRoutes = [
         path: "/",
     },
     {
-        label : "Contact Us",
-        path: "/contact",
+        label: "About Us",
+        path: "/about",
     }
 ]; 
