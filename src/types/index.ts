@@ -20,5 +20,6 @@ export interface Interview {
     userId: string;
     techStack: string;
     questions: {questions: string; answer: string}[];
+    createdAt: Timestamp;
     updateAt: Timestamp;
 }
