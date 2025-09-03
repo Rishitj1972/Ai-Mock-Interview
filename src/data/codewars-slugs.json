@@ -5,21 +5,47 @@
       "multiples-of-3-and-5",
       "range-extraction",
       "sum-of-digits",
-      "reverse-a-string"
+      "reverse-a-string",
+      "find-the-odd-int",
+      "sum-of-two-lowest-positive-integers",
+      "count-vowels",
+      "isogram",
+      "digital-root",
+      "even-or-odd",
+      "duplicate-encoder",
+      "disemvowel-trolls",
+      "anagram-detection",
+      "jaden-casing-strings"
     ],
     "medium": [
       "maximum-subarray-sum",
       "expand-array",
       "truncate-string",
       "unique-in-order",
-      "your-order-please"
+      "your-order-please",
+      "sum-of-pairs",
+      "next-smaller-number",
+      "balanced-brackets",
+      "find-the-parity-outlier",
+      "weight-for-weight",
+      "primes-in-numbers",
+      "persistent-bugger",
+      "moving-zeroes-to-the-end",
+      "flatten-and-sort-an-array"
     ],
     "hard": [
       "create-phone-number",
       "orderly-queue",
       "permutations",
       "sum-of-substrings",
-      "longest-path"
+      "sudoku-solver",
+      "word-search",
+      "largest-product-in-a-series",
+      "minimum-spanning-tree",
+      "convex-hull",
+      "regex-crossword",
+      "string-transforms",
+      "advanced-parsing"
     ]
   },
   "Data Scientist": {
@@ -28,21 +54,36 @@
       "basic-statistics",
       "sum-of-numbers",
       "count-characters",
-      "csv-parser"
+      "csv-parser",
+      "mode-and-median",
+      "variance-calculation",
+      "simple-frequency-count",
+      "normalize-list",
+      "moving-average-simple"
     ],
     "medium": [
       "iqr-outliers",
       "moving-average",
       "kmeans-clustering",
       "normalize-data",
-      "median-filter"
+      "median-filter",
+      "time-series-decomposition",
+      "cross-validation-split",
+      "feature-scaling",
+      "pca-projection",
+      "bootstrap-resampling"
     ],
     "hard": [
       "linear-regression",
       "pca-implementation",
       "svm-from-scratch",
-      "time-series-forecast",
-      "gradient-descent"
+      "bayesian-network",
+      "hidden-markov-model",
+      "gradient-boosting-machine",
+      "deep-neural-network",
+      "topic-modeling-lda",
+      "time-series-forecasting",
+      "anomaly-detection"
     ]
   }
 }

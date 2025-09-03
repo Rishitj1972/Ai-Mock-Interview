@@ -102,9 +102,10 @@ const CodeEditorPage = () => {
     const roleSlugs: string[] | undefined = (SLUGS as any)[jobRole]?.[difficulty];
     if (!roleSlugs || roleSlugs.length === 0) return;
 
-    // Pick two random slugs
-    const shuffled = roleSlugs.sort(() => 0.5 - Math.random());
-    const selectedSlugs = shuffled.slice(0, 2);
+  // Deduplicate slugs and pick up to two random unique slugs
+  const uniqueRoleSlugs = Array.from(new Set(roleSlugs));
+  const shuffled = uniqueRoleSlugs.sort(() => 0.5 - Math.random());
+  const selectedSlugs = shuffled.slice(0, Math.min(2, shuffled.length));
 
     // Fetch kata details from Codewars for each slug
     const DEFAULT_UNIQUE_EXAMPLES: Array<{ input: string; output: string }> = [
@@ -148,10 +149,18 @@ const CodeEditorPage = () => {
     });
 
   const kataResults = (await Promise.all(kataPromises)).filter(Boolean) as Problem[];
-    setProblems(kataResults);
-    if (kataResults.length > 0) {
-      setSelectedProblem(kataResults[0]);
-      setCode(kataResults[0].starterCode[language as keyof Problem['starterCode']] || '');
+    // Ensure fetched problems are unique by id (filter accidental duplicates)
+    const seen = new Set<number>();
+    const uniqueProblems = kataResults.filter(p => {
+      if (!p || seen.has(p.id)) return false;
+      seen.add(p.id);
+      return true;
+    });
+
+    setProblems(uniqueProblems);
+    if (uniqueProblems.length > 0) {
+      setSelectedProblem(uniqueProblems[0]);
+      setCode(uniqueProblems[0].starterCode[language as keyof Problem['starterCode']] || '');
     }
   };
 
