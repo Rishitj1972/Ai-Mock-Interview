@@ -1,0 +1,48 @@
+{
+  "Software Developer": {
+    "easy": [
+      "valid-braces",
+      "multiples-of-3-and-5",
+      "range-extraction",
+      "sum-of-digits",
+      "reverse-a-string"
+    ],
+    "medium": [
+      "maximum-subarray-sum",
+      "expand-array",
+      "truncate-string",
+      "unique-in-order",
+      "your-order-please"
+    ],
+    "hard": [
+      "create-phone-number",
+      "orderly-queue",
+      "permutations",
+      "sum-of-substrings",
+      "longest-path"
+    ]
+  },
+  "Data Scientist": {
+    "easy": [
+      "calculate-mean",
+      "basic-statistics",
+      "sum-of-numbers",
+      "count-characters",
+      "csv-parser"
+    ],
+    "medium": [
+      "iqr-outliers",
+      "moving-average",
+      "kmeans-clustering",
+      "normalize-data",
+      "median-filter"
+    ],
+    "hard": [
+      "linear-regression",
+      "pca-implementation",
+      "svm-from-scratch",
+      "time-series-forecast",
+      "gradient-descent"
+    ]
+  }
+}

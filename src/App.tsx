@@ -11,6 +11,7 @@ import Dashboard from "./routes/dashboard";
 import CreateEditPage from "./routes/create-edit-page";
 import AboutPage from "./routes/about";
 import CVReviewPage from "@/routes/cv-review";
+import CodeEditorPage from "@/routes/code-editor";
 import MockLoadPage from "./routes/mock-load-page";
 import  MockInterviewPage  from "./routes/mock-interview-page";
 
@@ -41,6 +42,7 @@ const App = () => {
         </Route>
         
         <Route path="/cv-review" element={<CVReviewPage />} />
+  <Route path="/code-editor" element={<CodeEditorPage/>} />
       </Route>
 
     </Routes>
