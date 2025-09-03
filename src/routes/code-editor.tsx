@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import Editor from '@monaco-editor/react';
 import axios from 'axios';
 import { Button } from '@/components/ui/button';
@@ -57,6 +57,36 @@ const CodeEditorPage = () => {
   const [language, setLanguage] = useState<string>('javascript');
   const [output, setOutput] = useState<string>('');
   const [isRunning, setIsRunning] = useState<boolean>(false);
+  // Resizable left pane state
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const [leftPercent, setLeftPercent] = useState<number>(50); // default 50%
+  const [isDragging, setIsDragging] = useState(false);
+  const [isLarge, setIsLarge] = useState<boolean>(typeof window !== 'undefined' ? window.innerWidth >= 1024 : true);
+
+  // update isLarge on resize
+  useEffect(() => {
+    const onResize = () => setIsLarge(window.innerWidth >= 1024);
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
+
+  useEffect(() => {
+    const onMove = (e: MouseEvent) => {
+      if (!isDragging || !containerRef.current) return;
+      const rect = containerRef.current.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const pct = Math.round((x / rect.width) * 100);
+      const clamped = Math.max(20, Math.min(80, pct));
+      setLeftPercent(clamped);
+    };
+    const onUp = () => setIsDragging(false);
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('mouseup', onUp);
+    return () => {
+      window.removeEventListener('mousemove', onMove);
+      window.removeEventListener('mouseup', onUp);
+    };
+  }, [isDragging]);
 
   const handleGenerateProblems = async () => {
     if (!jobRole || !experience) return;
@@ -408,9 +438,126 @@ const CodeEditorPage = () => {
           </CardContent>
         </Card>
       ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-[calc(100vh-200px)]">
-          {/* Left Side - Problems */}
-          <div className="space-y-4 overflow-y-auto">
+        <div ref={containerRef} className="h-[calc(100vh-200px)] relative">
+          {/* Desktop resizable layout */}
+          <div className="hidden lg:flex w-full h-full" style={{ gap: '1.5rem' }}>
+            <div className="space-y-4 overflow-y-auto" style={{ width: `${leftPercent}%` }}>
+              <div className="flex gap-2 mb-4">
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setSelectedProblem(null);
+                    setProblems([]);
+                    setCode('');
+                    setOutput('');
+                  }}
+                >
+                  ← Back to Setup
+                </Button>
+              </div>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Available Problems</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {problems.map((problem, index) => (
+                    <Button
+                      key={problem.id}
+                      variant={selectedProblem?.id === problem.id ? "default" : "outline"}
+                      className="w-full mb-2"
+                      onClick={() => handleProblemSelect(problem)}
+                    >
+                      Problem {index + 1}: {problem.title}
+                    </Button>
+                  ))}
+                </CardContent>
+              </Card>
+
+              {selectedProblem && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg">{selectedProblem.title}</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="mb-4 text-sm text-gray-700">{selectedProblem.description}</p>
+                  
+                    <h4 className="font-semibold mb-2">Examples:</h4>
+                    {selectedProblem.examples.map((example, index) => (
+                      <div key={index} className="bg-slate-800 text-white p-3 rounded mb-2">
+                        <pre className="whitespace-pre-wrap text-sm"><strong>Input:</strong> {example.input}\n<strong>Output:</strong> {example.output}</pre>
+                      </div>
+                    ))}
+                  </CardContent>
+                </Card>
+              )}
+            </div>
+
+            {/* Divider */}
+            <div
+              onMouseDown={() => setIsDragging(true)}
+              className="hidden lg:block bg-gray-200 cursor-col-resize"
+              style={{ width: 8, margin: '0 8px' }}
+            />
+
+            {/* Right Side - Code Editor (remaining width) */}
+            <div className="flex flex-col space-y-4 h-full" style={{ width: `${100 - leftPercent}%` }}>
+              <div className="flex gap-2">
+                <select
+                  value={language}
+                  onChange={(e) => handleLanguageChange(e.target.value)}
+                  className="p-2 border border-gray-300 rounded-md"
+                >
+                  {LANGUAGES.map(lang => (
+                    <option key={lang.id} value={lang.id}>{lang.name}</option>
+                  ))}
+                </select>
+                
+                <Button onClick={runCode} disabled={isRunning}>
+                  {isRunning ? 'Running...' : 'Run Code'}
+                </Button>
+              </div>
+
+              <Card className="flex-1 h-full">
+                <CardContent className="p-0 h-full">
+                  <div className="h-full">
+                    <Editor
+                      height="100%"
+                      language={language}
+                      value={code}
+                      onChange={(value) => setCode(value || '')}
+                      theme="vs-light"
+                      options={{
+                        minimap: { enabled: false },
+                        fontSize: 14,
+                        lineNumbers: 'on',
+                        roundedSelection: false,
+                        scrollBeyondLastLine: false,
+                        readOnly: false,
+                        automaticLayout: true,
+                      }}
+                    />
+                  </div>
+                </CardContent>
+              </Card>
+
+              {output && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Output</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <pre className="bg-black text-green-400 p-4 rounded overflow-x-auto">
+                      {output}
+                    </pre>
+                  </CardContent>
+                </Card>
+              )}
+            </div>
+          </div>
+
+          {/* Mobile stacked layout */}
+          <div className="lg:hidden space-y-4 h-full overflow-y-auto">
             <div className="flex gap-2 mb-4">
               <Button
                 variant="outline"
@@ -446,25 +593,20 @@ const CodeEditorPage = () => {
             {selectedProblem && (
               <Card>
                 <CardHeader>
-                  <CardTitle>{selectedProblem.title}</CardTitle>
+                  <CardTitle className="text-lg">{selectedProblem.title}</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p className="mb-4">{selectedProblem.description}</p>
-                  
+                  <p className="mb-4 text-sm text-gray-700">{selectedProblem.description}</p>
                   <h4 className="font-semibold mb-2">Examples:</h4>
                   {selectedProblem.examples.map((example, index) => (
-                    <div key={index} className="bg-gray-100 p-3 rounded mb-2">
-                      <p><strong>Input:</strong> {example.input}</p>
-                      <p><strong>Output:</strong> {example.output}</p>
+                    <div key={index} className="bg-slate-800 text-white p-3 rounded mb-2">
+                      <pre className="whitespace-pre-wrap text-sm"><strong>Input:</strong> {example.input}\n<strong>Output:</strong> {example.output}</pre>
                     </div>
                   ))}
                 </CardContent>
               </Card>
             )}
-          </div>
 
-          {/* Right Side - Code Editor */}
-          <div className="flex flex-col space-y-4">
             <div className="flex gap-2">
               <select
                 value={language}
@@ -481,23 +623,15 @@ const CodeEditorPage = () => {
               </Button>
             </div>
 
-            <Card className="flex-1">
-              <CardContent className="p-0 h-full">
+            <Card>
+              <CardContent className="p-0">
                 <Editor
-                  height="400px"
+                  height="300px"
                   language={language}
                   value={code}
                   onChange={(value) => setCode(value || '')}
                   theme="vs-light"
-                  options={{
-                    minimap: { enabled: false },
-                    fontSize: 14,
-                    lineNumbers: 'on',
-                    roundedSelection: false,
-                    scrollBeyondLastLine: false,
-                    readOnly: false,
-                    automaticLayout: true,
-                  }}
+                  options={{ minimap: { enabled: false }, automaticLayout: true }}
                 />
               </CardContent>
             </Card>
@@ -508,9 +642,7 @@ const CodeEditorPage = () => {
                   <CardTitle>Output</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <pre className="bg-black text-green-400 p-4 rounded overflow-x-auto">
-                    {output}
-                  </pre>
+                  <pre className="bg-black text-green-400 p-4 rounded overflow-x-auto">{output}</pre>
                 </CardContent>
               </Card>
             )}
