@@ -185,7 +185,9 @@ const CodeEditorPage = () => {
     
     // Automatically generate test cases when problem is selected
     setTimeout(() => generateTestCases(), 500);
-  };  const handleLanguageChange = (newLanguage: string) => {
+  };
+
+  const handleLanguageChange = (newLanguage: string) => {
     setLanguage(newLanguage);
     if (selectedProblem) {
       const starterCode = selectedProblem.starterCode[newLanguage as keyof Problem['starterCode']] || '';
