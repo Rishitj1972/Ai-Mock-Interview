@@ -5,7 +5,7 @@ import LogoContainer from "./logo-container";
 import NavigationRoutes from "./navigation-routes";
 import { NavLink } from "react-router";
 import ProfileContainer from "./profile-container";
-
+import ToggleContainer from "./toggle-container";
 
 const Header = () => {
   const { userId } = useAuth();
@@ -50,7 +50,7 @@ const Header = () => {
                  cn("text-base text-neutral-600 transition-colors duration-200 hover:text-indigo-900 hover:bg-indigo-100 hover:rounded-lg px-3 py-1",
                       isActive && "text-neutral-900 font-semibold")
             }>
-              Practice problems
+              Practice Problems
               </NavLink>
               )
             }
@@ -58,6 +58,8 @@ const Header = () => {
           <div className="ml-auto flex items-center gap-6">
             {/* Profile Section */}
             <ProfileContainer  />
+            {/* mobile toggle section */}
+            <ToggleContainer/>
           </div>
         </div>
       </Container>

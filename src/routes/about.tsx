@@ -1,4 +1,3 @@
-
 const AboutPage = () => {
   return (
     <div className="container mx-auto py-10 px-4">
@@ -7,7 +6,7 @@ const AboutPage = () => {
         Welcome to AI Mock Interview! Our platform helps you prepare for interviews with realistic mock sessions powered by AI. Whether you are a job seeker or a recruiter, our tools are designed to make interview preparation efficient and effective.
       </p>
 
-    {/* Developers listing section */}
+      {/* Developers listing section */}
       <div className="my-12">
         <h2 className="text-2xl font-semibold mb-6 text-center">Meet the Developers</h2>
         <div className="flex flex-wrap justify-center gap-8">

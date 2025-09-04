@@ -76,8 +76,11 @@ export default tseslint.config([
 ])
 ```
 
+---
 
 ## Practice problems (Code Editor) — details
+
+This expanded reference explains how the Practice Problems feature works, where the code is, how execution is performed, common failure modes, and recommended next steps.
 
 ### Quick flow
 1. User types a Job Role and enters Years of Experience and clicks "Generate Problems".  
@@ -126,3 +129,5 @@ npm run dev
 - Add a small server-side proxy example (I can scaffold Express or serverless), which improves security and reliability.  
 - Add a validated slug-checker script that prunes `src/data/codewars-slugs.json` of non-existing slugs.  
 - Add a demo problem that displays even when Codewars fetch fails (good for offline demos).  
+
+

@@ -37,6 +37,23 @@ const ToggleContainer = () => {
                 Take An Interview
               </NavLink>
               
+              <NavLink 
+                to="/cv-review" 
+                className={({ isActive }) => 
+                  cn("text-base text-neutral-600 flex items-center gap-2", 
+                      isActive && "text-neutral-900 font-semibold")
+                }>
+                CV Review
+              </NavLink>
+              
+              <NavLink 
+                to="/code-editor" 
+                className={({ isActive }) => 
+                  cn("text-base text-neutral-600 flex items-center gap-2", 
+                      isActive && "text-neutral-900 font-semibold")
+                }>
+                Practice Problems
+              </NavLink>
             </>
           )}
         </nav>
