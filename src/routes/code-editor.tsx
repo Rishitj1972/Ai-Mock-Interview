@@ -18,6 +18,7 @@ interface Problem {
     python: string;
     java: string;
   };
+  slug?: string;
 }
 
 interface Language {
@@ -56,7 +57,10 @@ const CodeEditorPage = () => {
   const [code, setCode] = useState<string>('');
   const [language, setLanguage] = useState<string>('javascript');
   const [output, setOutput] = useState<string>('');
+  const [functionName, setFunctionName] = useState<string>('');
   const [isRunning, setIsRunning] = useState<boolean>(false);
+  const [generatedTests, setGeneratedTests] = useState<Array<{ input: string; output: string }>>([]);
+  const [isGeneratingTests, setIsGeneratingTests] = useState<boolean>(false);
   // Resizable left pane state
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [leftPercent, setLeftPercent] = useState<number>(50); // default 50%
@@ -134,6 +138,7 @@ const CodeEditorPage = () => {
 
         return {
           id: data.id,
+          slug,
           title: data.name,
           description: data.description || data.name,
           examples,
@@ -159,8 +164,15 @@ const CodeEditorPage = () => {
 
     setProblems(uniqueProblems);
     if (uniqueProblems.length > 0) {
-      setSelectedProblem(uniqueProblems[0]);
-      setCode(uniqueProblems[0].starterCode[language as keyof Problem['starterCode']] || '');
+      const firstProblem = uniqueProblems[0];
+      setSelectedProblem(firstProblem);
+      setCode(firstProblem.starterCode[language as keyof Problem['starterCode']] || '');
+      // default function name from slug when available
+      const defName = firstProblem.slug ? firstProblem.slug.replace(/-/g, '_') : '';
+      setFunctionName(defName);
+      
+      // Automatically generate test cases for the first problem immediately
+      setTimeout(() => generateTestCases(firstProblem), 1000);
     }
   };
 
@@ -169,13 +181,102 @@ const CodeEditorPage = () => {
     const starterCode = problem.starterCode[language as keyof Problem['starterCode']] || '';
     setCode(starterCode);
     setOutput('');
-  };
-
-  const handleLanguageChange = (newLanguage: string) => {
+    setFunctionName(problem.slug ? problem.slug.replace(/-/g, '_') : '');
+    
+    // Automatically generate test cases when problem is selected
+    setTimeout(() => generateTestCases(), 500);
+  };  const handleLanguageChange = (newLanguage: string) => {
     setLanguage(newLanguage);
     if (selectedProblem) {
       const starterCode = selectedProblem.starterCode[newLanguage as keyof Problem['starterCode']] || '';
       setCode(starterCode);
+    }
+  };
+
+  const generateTestCases = async (targetProblem?: Problem, retryCount = 0) => {
+    const problemToUse = targetProblem || selectedProblem;
+    const funcName = functionName.trim() || (problemToUse?.slug ? problemToUse.slug.replace(/-/g, '_') : '');
+    
+    if (!problemToUse || !funcName) return;
+
+    setIsGeneratingTests(true);
+    try {
+      const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
+      if (!GEMINI_API_KEY) {
+        throw new Error('Gemini API key not configured. Set VITE_GEMINI_API_KEY in .env');
+      }
+
+      const prompt = `Based on this coding problem, generate exactly 3 test cases with input and expected output:
+
+Problem: ${problemToUse.title}
+Description: ${problemToUse.description}
+Function name: ${funcName}
+
+Please respond with ONLY a JSON array in this exact format:
+[
+  {"input": "test_input_1", "output": "expected_output_1"},
+  {"input": "test_input_2", "output": "expected_output_2"},
+  {"input": "test_input_3", "output": "expected_output_3"}
+]
+
+Make sure inputs are appropriate for the problem and outputs are correct. For array inputs, use proper array notation.`;
+
+      const response = await axios.post(
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`,
+        {
+          contents: [{
+            parts: [{ text: prompt }]
+          }]
+        },
+        {
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          timeout: 10000
+        }
+      );
+
+      const generatedText = response.data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+      
+      // Extract JSON from the response
+      const jsonMatch = generatedText.match(/\[\s*{[\s\S]*}\s*\]/);
+      if (jsonMatch) {
+        const testCases = JSON.parse(jsonMatch[0]);
+        setGeneratedTests(testCases);
+        
+        // Update the selected problem with generated test cases
+        if (problemToUse) {
+          const updatedProblem = { ...problemToUse, examples: testCases };
+          setSelectedProblem(updatedProblem);
+        }
+        
+        // Clear any previous error messages
+        setOutput('');
+      } else {
+        throw new Error('Failed to parse test cases from Gemini response');
+      }
+
+    } catch (error: any) {
+      console.error('Failed to generate test cases:', error);
+      
+      // Handle rate limiting with retry
+      if (error.response?.status === 429 && retryCount < 3) {
+        const delay = Math.pow(2, retryCount) * 1000; // Exponential backoff: 1s, 2s, 4s
+        console.log(`Rate limited, retrying in ${delay}ms...`);
+        setTimeout(() => {
+          generateTestCases(targetProblem, retryCount + 1);
+        }, delay);
+        return; // Don't set isGeneratingTests to false yet
+      }
+      
+      // For other errors or max retries reached
+      if (error.response?.status === 429) {
+        setOutput(`Rate limit exceeded. Please wait a moment and try selecting another problem.`);
+      } else {
+        setOutput(`Error generating test cases: ${error.message}`);
+      }
+      
+      setIsGeneratingTests(false);
     }
   };
 
@@ -252,10 +353,90 @@ const CodeEditorPage = () => {
 
         for (const url of candidateUrls) {
           try {
+            // If JS and problem has examples/generated tests, wrap code in test harness
+            let submissionSource = code;
+            if (language === 'javascript' && selectedProblem && selectedProblem.examples && selectedProblem.examples.length > 0 && functionName) {
+              const tests = selectedProblem.examples.map(ex => ({ input: ex.input, expected: ex.output }));
+              const harness = `
+// Test harness
+function runTests(fn, tests) {
+  console.log('TEST_RESULTS_START');
+  const results = [];
+  for (const test of tests) {
+    try {
+      let input = test.input;
+      // Try to parse input as JSON if it looks like an array or object
+      try {
+        if (input.startsWith('[') || input.startsWith('{') || input.startsWith('"')) {
+          input = JSON.parse(test.input);
+        }
+      } catch (e) {
+        // Keep as string if JSON parsing fails
+      }
+      
+      const result = fn(input);
+      const expected = test.expected;
+      
+      // Compare result with expected (convert both to strings for comparison)
+      const pass = JSON.stringify(result) === JSON.stringify(expected);
+      results.push({
+        input: test.input,
+        expected: expected,
+        result: result,
+        pass: pass
+      });
+    } catch (error) {
+      results.push({
+        input: test.input,
+        expected: test.expected,
+        error: error.message,
+        pass: false
+      });
+    }
+  }
+  
+  console.log(JSON.stringify(results, null, 2));
+  console.log('TEST_RESULTS_END');
+}
+
+// Debug: Check what's available in global scope
+console.log('Available functions:', Object.getOwnPropertyNames(globalThis).filter(name => typeof globalThis[name] === 'function'));
+console.log('Looking for function:', '${functionName}');
+
+// Try to run tests
+try {
+  let userFn = null;
+  
+  // Try multiple ways to find the function
+  if (typeof ${functionName} === 'function') {
+    userFn = ${functionName};
+    console.log('Found function via direct reference');
+  } else if (typeof globalThis.${functionName} === 'function') {
+    userFn = globalThis.${functionName};
+    console.log('Found function via globalThis');
+  } else if (typeof window !== 'undefined' && typeof window.${functionName} === 'function') {
+    userFn = window.${functionName};
+    console.log('Found function via window');
+  }
+  
+  if (userFn) {
+    console.log('Running tests for function:', '${functionName}');
+    runTests(userFn, ${JSON.stringify(tests)});
+  } else {
+    console.log('ERROR: Function ${functionName} not found');
+    console.log('Available functions:', Object.getOwnPropertyNames(globalThis).filter(name => typeof globalThis[name] === 'function'));
+  }
+} catch (e) {
+  console.log('ERROR: ' + e.message);
+}
+`;
+              submissionSource = code + '\n' + harness;
+            }
+
             const res = await axios.post(
               url,
               {
-                source_code: code,
+                source_code: submissionSource,
                 language_id: languageConfig.judge0Id
               },
               { headers: attemptHeadersBase, timeout: 20000 }
@@ -398,9 +579,52 @@ const CodeEditorPage = () => {
 
       // If nothing standard present, show whole payload for debugging
       if (!stdout && !stderr && !compile_output) {
-        setOutput(JSON.stringify(result, null, 2));
+        // Check if this is a successful execution with no output
+        if (exec.status?.id === 3) { // Status 3 = Accepted in Judge0
+          setOutput('Code executed successfully but produced no output.');
+        } else {
+          setOutput(JSON.stringify(result, null, 2));
+        }
       } else {
-        setOutput(stdout || stderr || compile_output || 'No output');
+        const outputText = stdout || stderr || compile_output || 'No output';
+        
+        // Check if output contains test results
+        if (outputText.includes('TEST_RESULTS_START') && outputText.includes('TEST_RESULTS_END')) {
+          try {
+            const startIdx = outputText.indexOf('TEST_RESULTS_START') + 'TEST_RESULTS_START'.length;
+            const endIdx = outputText.indexOf('TEST_RESULTS_END');
+            const jsonStr = outputText.substring(startIdx, endIdx).trim();
+            const testResults = JSON.parse(jsonStr);
+            
+            // Format test results nicely
+            let formattedOutput = '=== TEST RESULTS ===\n\n';
+            testResults.forEach((test: any, index: number) => {
+              formattedOutput += `Test ${index + 1}: ${test.pass ? '✅ PASS' : '❌ FAIL'}\n`;
+              formattedOutput += `  Input: ${test.input}\n`;
+              formattedOutput += `  Expected: ${test.expected}\n`;
+              if (test.error) {
+                formattedOutput += `  Error: ${test.error}\n`;
+              } else {
+                formattedOutput += `  Got: ${JSON.stringify(test.result)}\n`;
+              }
+              formattedOutput += '\n';
+            });
+            
+            const passedTests = testResults.filter((t: any) => t.pass).length;
+            formattedOutput += `Summary: ${passedTests}/${testResults.length} tests passed`;
+            
+            setOutput(formattedOutput);
+          } catch (e) {
+            setOutput(outputText);
+          }
+        } else {
+          // No test results found, but we have output - check if it's just empty execution
+          if (exec.status?.id === 3 && !outputText.trim()) {
+            setOutput('Code executed successfully but produced no visible output. Make sure your function returns a value and is being called.');
+          } else {
+            setOutput(outputText);
+          }
+        }
       }
     } catch (error: any) {
       // Provide a clearer message with request info when available
@@ -546,10 +770,21 @@ const CodeEditorPage = () => {
                     <option key={lang.id} value={lang.id}>{lang.name}</option>
                   ))}
                 </select>
-                
+
+                <Input
+                  value={functionName}
+                  onChange={(e) => setFunctionName(e.target.value)}
+                  placeholder="Function name (for tests)"
+                  className="p-2 w-48"
+                />
+
                 <Button onClick={runCode} disabled={isRunning}>
                   {isRunning ? 'Running...' : 'Run Code'}
                 </Button>
+                
+                {isGeneratingTests && (
+                  <span className="text-sm text-gray-500 self-center">Generating tests...</span>
+                )}
               </div>
 
               <Card className="flex-1 h-full">
@@ -660,9 +895,20 @@ const CodeEditorPage = () => {
                 ))}
               </select>
               
-              <Button onClick={runCode} disabled={isRunning}>
+              <Input
+                value={functionName}
+                onChange={(e) => setFunctionName(e.target.value)}
+                placeholder="Function name (for tests)"
+                className="p-2 w-48"
+              />
+
+              <Button onClick={runCode} disabled={isRunning} className="flex-1">
                 {isRunning ? 'Running...' : 'Run Code'}
               </Button>
+              
+              {isGeneratingTests && (
+                <span className="text-sm text-gray-500 self-center">Generating tests...</span>
+              )}
             </div>
 
             <Card>
