@@ -409,24 +409,26 @@ console.log('Looking for function:', '${functionName}');
 try {
   let userFn = null;
   
-  // Try multiple ways to find the function
-  if (typeof ${functionName} === 'function') {
-    userFn = ${functionName};
-    console.log('Found function via direct reference');
-  } else if (typeof globalThis.${functionName} === 'function') {
-    userFn = globalThis.${functionName};
-    console.log('Found function via globalThis');
-  } else if (typeof window !== 'undefined' && typeof window.${functionName} === 'function') {
-    userFn = window.${functionName};
-    console.log('Found function via window');
-  }
-  
-  if (userFn) {
-    console.log('Running tests for function:', '${functionName}');
-    runTests(userFn, ${JSON.stringify(tests)});
+  // Validate functionName: only letters, numbers, underscores
+  if (!/^[_a-zA-Z][_a-zA-Z0-9]*$/.test(functionName)) {
+    console.log('ERROR: Invalid function name:', functionName);
   } else {
-    console.log('ERROR: Function ${functionName} not found');
-    console.log('Available functions:', Object.getOwnPropertyNames(globalThis).filter(name => typeof globalThis[name] === 'function'));
+    // Try multiple ways to find the function
+    if (typeof globalThis[functionName] === 'function') {
+      userFn = globalThis[functionName];
+      console.log('Found function via globalThis');
+    } else if (typeof window !== 'undefined' && typeof window[functionName] === 'function') {
+      userFn = window[functionName];
+      console.log('Found function via window');
+    }
+    
+    if (userFn) {
+      console.log('Running tests for function:', functionName);
+      runTests(userFn, ${JSON.stringify(tests)});
+    } else {
+      console.log('ERROR: Function', functionName, 'not found');
+      console.log('Available functions:', Object.getOwnPropertyNames(globalThis).filter(name => typeof globalThis[name] === 'function'));
+    }
   }
 } catch (e) {
   console.log('ERROR: ' + e.message);
