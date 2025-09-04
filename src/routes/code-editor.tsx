@@ -647,7 +647,7 @@ try {
   // Note: Judge0 API used in runCode
 
   return (
-    <div className="container mx-auto py-6 px-4 max-w-7xl">
+    <div className="container mx-auto py-6 px-4 max-w-7xl min-h-[calc(100vh-200px)] flex flex-col">
       <h1 className="text-3xl font-bold mb-6">Practice Coding Problems</h1>
       
       {!selectedProblem ? (
@@ -689,7 +689,7 @@ try {
           </CardContent>
         </Card>
       ) : (
-        <div ref={containerRef} className="h-[calc(100vh-200px)] relative">
+        <div ref={containerRef} className="flex-1 h-[calc(100vh-250px)] relative pb-4">
           {/* Desktop resizable layout */}
           <div className="hidden lg:flex w-full h-full" style={{ gap: '1.5rem' }}>
             <div className="space-y-4 overflow-y-auto" style={{ width: `${leftPercent}%` }}>
@@ -759,8 +759,8 @@ try {
             />
 
             {/* Right Side - Code Editor (remaining width) */}
-            <div className="flex flex-col space-y-4 h-full" style={{ width: `${100 - leftPercent}%` }}>
-              <div className="flex gap-2">
+            <div className="flex flex-col space-y-4 h-full overflow-hidden" style={{ width: `${100 - leftPercent}%` }}>
+              <div className="flex gap-2 flex-shrink-0">
                 <select
                   value={language}
                   onChange={(e) => handleLanguageChange(e.target.value)}
@@ -787,41 +787,43 @@ try {
                 )}
               </div>
 
-              <Card className="flex-1 h-full">
-                <CardContent className="p-0 h-full">
-                  <div className="h-full">
-                    <Editor
-                      height="100%"
-                      language={language}
-                      value={code}
-                      onChange={(value) => setCode(value || '')}
-                      theme="vs-light"
-                      options={{
-                        minimap: { enabled: false },
-                        fontSize: 14,
-                        lineNumbers: 'on',
-                        roundedSelection: false,
-                        scrollBeyondLastLine: false,
-                        readOnly: false,
-                        automaticLayout: true,
-                      }}
-                    />
-                  </div>
-                </CardContent>
-              </Card>
-
-              {output && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Output</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <pre className="bg-black text-green-400 p-4 rounded overflow-x-auto">
-                      {output}
-                    </pre>
+              <div className="flex-1 flex flex-col space-y-4 min-h-0">
+                <Card className={`${output ? 'flex-1' : 'h-full'} min-h-0`}>
+                  <CardContent className="p-0 h-full">
+                    <div className="h-full">
+                      <Editor
+                        height="100%"
+                        language={language}
+                        value={code}
+                        onChange={(value) => setCode(value || '')}
+                        theme="vs-light"
+                        options={{
+                          minimap: { enabled: false },
+                          fontSize: 14,
+                          lineNumbers: 'on',
+                          roundedSelection: false,
+                          scrollBeyondLastLine: false,
+                          readOnly: false,
+                          automaticLayout: true,
+                        }}
+                      />
+                    </div>
                   </CardContent>
                 </Card>
-              )}
+
+                {output && (
+                  <Card className="flex-1 min-h-0">
+                    <CardHeader className="pb-2">
+                      <CardTitle>Output</CardTitle>
+                    </CardHeader>
+                    <CardContent className="h-full overflow-hidden">
+                      <pre className="bg-black text-green-400 p-4 rounded h-full overflow-auto text-sm">
+                        {output}
+                      </pre>
+                    </CardContent>
+                  </Card>
+                )}
+              </div>
             </div>
           </div>
 

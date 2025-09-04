@@ -76,25 +76,58 @@ export default tseslint.config([
 ])
 ```
 
-## Practice problems (Code Editor)
+---
 
-A short reference for the Practice Problems feature implemented at `src/routes/code-editor.tsx`.
+## Practice problems (Code Editor) — details
 
-- User flow: pick Job Role + Years → app selects 2 curated Codewars slugs → fetches kata title/description → shows examples in the left panel → edit code in the Monaco editor → Run.
-- Where the code lives: `src/routes/code-editor.tsx` (orchestration, UI, editor, and execution logic) and `src/data/codewars-slugs.json` (curated slug lists).
-- Execution: client tries a configured Judge0 endpoint (`VITE_JUDGE0_URL`) with multiple wrapper variants; if all attempts fail it falls back to Piston (`VITE_PISTON_URL`).
-- Important env vars (Vite `.env`):
-  - `VITE_JUDGE0_URL` — required (Judge0 base URL)
-  - `VITE_JUDGE0_KEY` — optional RapidAPI key (client-only usage is not secure for production)
-  - `VITE_JUDGE0_HOST` — optional RapidAPI host header
-  - `VITE_PISTON_URL` — optional Piston fallback URL
-- Quick run: start dev server and open `/code-editor`:
+This expanded reference explains how the Practice Problems feature works, where the code is, how execution is performed, common failure modes, and recommended next steps.
+
+### Quick flow
+1. User types a Job Role and enters Years of Experience and clicks "Generate Problems".  
+2. App selects up to 2 curated Codewars slugs (from `src/data/codewars-slugs.json`) for the detected role and difficulty.  
+3. The app fetches kata metadata from the Codewars API and displays the problem title, description, and examples in the left panel.  
+4. User edits code in the Monaco editor and picks a language. Starter templates are provided.  
+5. User clicks Run — the client attempts to execute code via Judge0 (multiple endpoint variants). If Judge0 fails, it falls back to Piston. Results and diagnostics appear in the Output card.
+
+### Where the code lives
+- `src/routes/code-editor.tsx` — main page (UI, problem selection, Monaco editor, execution pipeline).  
+- `src/data/codewars-slugs.json` — curated slug lists per role/difficulty (used to pick problems).  
+- `src/components/ui/*` — Card, Button, Input components used to build the UI.
+
+### Execution summary (short)
+- Primary runner: Judge0 (set `VITE_JUDGE0_URL` in `.env`). The client will try several common `/submissions` URL variants and rotate known wrapper bases when a RapidAPI key is present.  
+- Fallback: Piston (`VITE_PISTON_URL`) — used when Judge0 attempts all fail. Piston calls attempt to find an appropriate language `version` and will retry using a `files` payload if required by the deployment.
+
+### Important env vars
+Place these in your Vite `.env` (prefix `VITE_`):
+- `VITE_JUDGE0_URL` — required; base Judge0 URL (example: `https://judge0-ce.p.rapidapi.com`).
+- `VITE_JUDGE0_KEY` — optional RapidAPI key (not secure to expose in public builds).
+- `VITE_JUDGE0_HOST` — optional RapidAPI host header (used alongside the key).
+- `VITE_PISTON_URL` — optional override for Piston fallback (default used if unset).
+
+### Troubleshooting & common failures
+- 403 from Judge0: usually means the RapidAPI subscription for that wrapper is not enabled.  
+- 404 from Judge0: wrapper exposes a different path; client tries multiple path variants to mitigate this.  
+- 429 from Judge0: wrapper is rate-limited. Consider a server-side proxy or a paid plan.  
+- Empty output: code executed but printed nothing. Starter templates include a simple print/log to verify the runner.
+- Slugs that don't exist on Codewars: the curated list may contain placeholders. You can validate slugs by calling `https://www.codewars.com/api/v1/code-challenges/{slug}` and removing invalid ones.
+
+### Security note
+This project currently calls Judge0/Piston directly from the browser and may expose keys if you put them in `.env`. For production you should:
+- Implement a server-side proxy (simple Express endpoint or serverless function) that stores API keys securely and forwards requests to Judge0.  
+- Or self-host Judge0 and point `VITE_JUDGE0_URL` to your internal host.
+
+### Developer quick run
+Start the dev server and open the page:
 
 ```bash
 npm run dev
-# open http://localhost:5173/code-editor (or the dev server URL shown)
+# then open the dev URL and navigate to /code-editor
 ```
 
-Notes:
-- For production hide API keys server-side (proxy or self-host Judge0).
-- The README entry is intentionally short; ask me to expand with examples, screenshots, or a server proxy example if you want.
+### Optional improvements (recommended)
+- Add a small server-side proxy example (I can scaffold Express or serverless), which improves security and reliability.  
+- Add a validated slug-checker script that prunes `src/data/codewars-slugs.json` of non-existing slugs.  
+- Add a demo problem that displays even when Codewars fetch fails (good for offline demos).  
+
+
