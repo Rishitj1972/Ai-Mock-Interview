@@ -99,7 +99,7 @@ const FormMockInterview = ({ initialData }: FormMockInterviewProps) => {
   // creating AI response and prompt generation
 
   const generateAiResponse = async (data: FormData) => {
-    const prompt = `As an experienced prompt engineer, generate a JSON array containing 8
+    const prompt = `As an experienced prompt engineer, generate a JSON array containing 15
         technical interview question along with detailed answer based on the following job information.
         Each object in the array should have the fields "question" and "answer" formatted as follows:
         

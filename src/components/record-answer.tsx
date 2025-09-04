@@ -42,9 +42,9 @@ const RecordAnswer = ({question} : RecordAnswerProps) => {
      if(isRecording) {
         stopSpeechToText();
 
-        if(userAnswer.length < 30) {
+        if(userAnswer.length < 20) {
             toast.error("Error",{
-                description: "Your answer should be more than 30 characters",
+                description: "Your answer should be more than 20 characters",
             })
             return;
         }
@@ -56,6 +56,7 @@ const RecordAnswer = ({question} : RecordAnswerProps) => {
         );
         setAiResult(aiResult);
         console.log("AI Feedback:", aiResult);
+        console.log("USer Answer : ",userAnswer);
      } else {
         startSpeechToText();
      }
@@ -154,11 +155,15 @@ const RecordAnswer = ({question} : RecordAnswerProps) => {
         disbaled={!aiResult}
         />
     </div>
-    <div className='w-full mt-4 p-4 border rounded-md bg-gray-50'>
+    <div className='w-full mt-14 p-4 border rounded-md bg-gray-50'>
         <h2 className='text-lg font-semibold'>Your Answer:</h2>
-        <p className='text-sm mt-2 text-gray-700 whitespace-normal'>
-            {userAnswer || "start recording to see your answer"}
-        </p>
+        <textarea
+          className='text-sm mt-2 text-gray-700 whitespace-normal w-full p-2 rounded border '
+          value={userAnswer}
+          onChange={e => setUserAnswer(e.target.value)}
+          rows={4}
+          placeholder='Start recording to see your answer or edit here...'
+        />
         {interimResult && (
             <p className='text-sm text-gray-500 mt-2'>
                 <strong>Current Speech:</strong>

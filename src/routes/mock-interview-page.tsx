@@ -50,7 +50,7 @@ const MockInterviewPage = () => {
   }
 
   return (
-  <div className="flex flex-col w-full gap-8 py-5">
+  <div className="flex flex-col w-full gap-10 py-10">
     <CustomBreadCrumb
         breadCrumbPage="Start"
         breadCrumbItems={[{label : "Mock Interview" , link : "/generate"},{label : interview?.position || "" , link : `/generate/${interview?.id}`}]}
