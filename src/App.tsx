@@ -42,7 +42,7 @@ const App = () => {
         </Route>
         
         <Route path="/cv-review" element={<CVReviewPage />} />
-  <Route path="/code-editor" element={<CodeEditorPage/>} />
+        <Route path="/code-editor" element={<CodeEditorPage/>} />
       </Route>
 
     </Routes>
