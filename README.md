@@ -3,7 +3,7 @@
 ```
 npm install
 
-Add the .env.local file including clerk and firebase configuration settings.
+Add the .env.local file including clerk, firebase and google gemini configuration settings.
 
 Run The Project :- npm run dev
 ```
