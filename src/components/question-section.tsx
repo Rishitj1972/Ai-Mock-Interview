@@ -54,13 +54,13 @@ export const QuestionSection = ({ questions }: QuestionSectionProps) => {
                 key={tab.question}
                 value={tab.question}
                 >
-                    {`Question #${i + 1}`}
+                    {`Question ${i + 1}`}
                 </TabsTrigger>
             ))}
             </TabsList>
             {questions?.map((tab,i) => (
                 <TabsContent key={i} value={tab.question}>
-                    <p className="text-base text-left tracking-wide text-neutral-500">
+                    <p className="text-base text-left tracking-wide text-neutral-500 mb-5">
                         {tab.question}
                     </p>
                     <div className="w-full flex items-center justify-end ">

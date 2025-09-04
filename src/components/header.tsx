@@ -34,6 +34,26 @@ const Header = () => {
                 Take An Interview
               </NavLink>
             )}
+            { userId && (<NavLink 
+                to="/cv-review" 
+                className={({ isActive }) => 
+                  cn("text-base text-neutral-600 transition-colors duration-200 hover:text-indigo-900 hover:bg-indigo-100 hover:rounded-lg px-3 py-1",
+                      isActive && "text-neutral-900 font-semibold")
+                }>
+                CV Review
+              </NavLink>
+            )}
+            {
+              userId && (<NavLink
+              to="/code-editor"
+              className={({ isActive }) =>
+                 cn("text-base text-neutral-600 transition-colors duration-200 hover:text-indigo-900 hover:bg-indigo-100 hover:rounded-lg px-3 py-1",
+                      isActive && "text-neutral-900 font-semibold")
+            }>
+              Practice Problems
+              </NavLink>
+              )
+            }
           </nav>
           <div className="ml-auto flex items-center gap-6">
             {/* Profile Section */}
