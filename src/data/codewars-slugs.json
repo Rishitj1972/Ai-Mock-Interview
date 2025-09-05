@@ -50,40 +50,40 @@
   },
   "Data Scientist": {
     "easy": [
-      "calculate-mean",
-      "basic-statistics",
-      "sum-of-numbers",
-      "count-characters",
-      "csv-parser",
-      "mode-and-median",
-      "variance-calculation",
-      "simple-frequency-count",
-      "normalize-list",
-      "moving-average-simple"
+      "csv-representation-of-array",
+      "convert-a-string-to-an-array",
+      "count-of-positives-sum-of-negatives",
+      "sum-of-positive",
+      "array-diff",
+      "remove-string-spaces",
+      "find-the-smallest-integer-in-the-array",
+      "reversed-strings",
+      "vowel-count",
+      "data-reverse"
     ],
     "medium": [
-      "iqr-outliers",
-      "moving-average",
-      "kmeans-clustering",
-      "normalize-data",
-      "median-filter",
-      "time-series-decomposition",
-      "cross-validation-split",
-      "feature-scaling",
-      "pca-projection",
-      "bootstrap-resampling"
+      "statistics-for-an-athletic-association",
+      "pick-peaks",
+      "sum-of-intervals",
+      "counting-duplicates",
+      "strip-comments",
+      "ip-validation",
+      "moving-zeroes-to-the-end",
+      "weight-for-weight",
+      "unique-in-order",
+      "maximum-subarray-sum"
     ],
     "hard": [
-      "linear-regression",
-      "pca-implementation",
-      "svm-from-scratch",
-      "bayesian-network",
-      "hidden-markov-model",
-      "gradient-boosting-machine",
-      "deep-neural-network",
-      "topic-modeling-lda",
-      "time-series-forecasting",
-      "anomaly-detection"
+      "most-frequently-used-words-in-a-text",
+      "snail",
+      "range-extraction",
+      "human-readable-duration-format",
+      "sudoku-solver",
+      "sum-strings-as-numbers",
+      "paginationhelper",
+      "permutations",
+      "observed-pin",
+      "valid-braces"
     ]
   }
 }
