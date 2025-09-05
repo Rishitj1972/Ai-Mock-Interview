@@ -312,6 +312,18 @@ Make sure inputs are appropriate for the problem and outputs are correct. For ar
   const runCode = async () => {
     if (!code.trim()) return;
 
+    // Prevent running code with unresolved merge conflict markers, which cause syntax errors in sandboxes
+    const conflictMarkers = ['<<<<<<<', '=======', '>>>>>>>'];
+    if (conflictMarkers.some(m => code.includes(m))) {
+      setOutput(
+        'Unresolved merge conflict markers detected in your code. Please resolve them before running.\n\n' +
+        'Tips:\n' +
+        "- Look for lines starting with '<<<<<<<', '=======', '>>>>>>>' and remove the markers while keeping the correct code.\n" +
+        '- After fixing, click Run Code again.'
+      );
+      return;
+    }
+
     setIsRunning(true);
     setOutput('Running...');
 
@@ -463,7 +475,6 @@ try {
   let userFn = null;
   const possibleNames = ['${detectedFunctionName}'];
   
-<<<<<<< HEAD
   // Add common variations of function names
   const baseName = '${detectedFunctionName}'.replace(/[_-]/g, '');
   possibleNames.push(baseName);
@@ -525,28 +536,6 @@ try {
       pass: false
     }], null, 2));
     console.log('TEST_RESULTS_END');
-=======
-  // Validate functionName: only letters, numbers, underscores
-  if (!/^[_a-zA-Z][_a-zA-Z0-9]*$/.test(functionName)) {
-    console.log('ERROR: Invalid function name:', functionName);
-  } else {
-    // Try multiple ways to find the function
-    if (typeof globalThis[functionName] === 'function') {
-      userFn = globalThis[functionName];
-      console.log('Found function via globalThis');
-    } else if (typeof window !== 'undefined' && typeof window[functionName] === 'function') {
-      userFn = window[functionName];
-      console.log('Found function via window');
-    }
-    
-    if (userFn) {
-      console.log('Running tests for function:', functionName);
-      runTests(userFn, ${JSON.stringify(tests)});
-    } else {
-      console.log('ERROR: Function', functionName, 'not found');
-      console.log('Available functions:', Object.getOwnPropertyNames(globalThis).filter(name => typeof globalThis[name] === 'function'));
-    }
->>>>>>> 0b39e83f23954ce2153872e3f662e2d84fcca13d
   }
 } catch (e) {
   console.log('TEST_RESULTS_START');
