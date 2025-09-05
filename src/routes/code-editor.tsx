@@ -211,7 +211,9 @@ const CodeEditorPage = () => {
     
     // Automatically generate test cases when problem is selected
     setTimeout(() => generateTestCases(), 500);
-  };  const handleLanguageChange = (newLanguage: string) => {
+  };
+
+  const handleLanguageChange = (newLanguage: string) => {
     setLanguage(newLanguage);
     if (selectedProblem) {
       const starterCode = selectedProblem.starterCode[newLanguage as keyof Problem['starterCode']] || '';
@@ -461,6 +463,7 @@ try {
   let userFn = null;
   const possibleNames = ['${detectedFunctionName}'];
   
+<<<<<<< HEAD
   // Add common variations of function names
   const baseName = '${detectedFunctionName}'.replace(/[_-]/g, '');
   possibleNames.push(baseName);
@@ -522,6 +525,28 @@ try {
       pass: false
     }], null, 2));
     console.log('TEST_RESULTS_END');
+=======
+  // Validate functionName: only letters, numbers, underscores
+  if (!/^[_a-zA-Z][_a-zA-Z0-9]*$/.test(functionName)) {
+    console.log('ERROR: Invalid function name:', functionName);
+  } else {
+    // Try multiple ways to find the function
+    if (typeof globalThis[functionName] === 'function') {
+      userFn = globalThis[functionName];
+      console.log('Found function via globalThis');
+    } else if (typeof window !== 'undefined' && typeof window[functionName] === 'function') {
+      userFn = window[functionName];
+      console.log('Found function via window');
+    }
+    
+    if (userFn) {
+      console.log('Running tests for function:', functionName);
+      runTests(userFn, ${JSON.stringify(tests)});
+    } else {
+      console.log('ERROR: Function', functionName, 'not found');
+      console.log('Available functions:', Object.getOwnPropertyNames(globalThis).filter(name => typeof globalThis[name] === 'function'));
+    }
+>>>>>>> 0b39e83f23954ce2153872e3f662e2d84fcca13d
   }
 } catch (e) {
   console.log('TEST_RESULTS_START');
