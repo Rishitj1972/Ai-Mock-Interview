@@ -67,6 +67,32 @@ const CodeEditorPage = () => {
   const [isDragging, setIsDragging] = useState(false);
   const [isLarge, setIsLarge] = useState<boolean>(typeof window !== 'undefined' ? window.innerWidth >= 1024 : true);
 
+  // Helper function to extract function names from code
+  const extractFunctionName = (code: string): string => {
+    // Look for function declarations and expressions
+    const patterns = [
+      /function\s+([a-zA-Z_$][a-zA-Z0-9_$]*)\s*\(/,
+      /const\s+([a-zA-Z_$][a-zA-Z0-9_$]*)\s*=\s*function/,
+      /let\s+([a-zA-Z_$][a-zA-Z0-9_$]*)\s*=\s*function/,
+      /var\s+([a-zA-Z_$][a-zA-Z0-9_$]*)\s*=\s*function/,
+      /const\s+([a-zA-Z_$][a-zA-Z0-9_$]*)\s*=\s*\(/,
+      /let\s+([a-zA-Z_$][a-zA-Z0-9_$]*)\s*=\s*\(/,
+      /var\s+([a-zA-Z_$][a-zA-Z0-9_$]*)\s*=\s*\(/,
+      // Python def pattern
+      /def\s+([a-zA-Z_][a-zA-Z0-9_]*)\s*\(/
+    ];
+
+    for (const pattern of patterns) {
+      const match = code.match(pattern);
+      if (match) {
+        return match[1];
+      }
+    }
+
+    // If no function found, return the current functionName or derive from problem slug
+    return functionName || (selectedProblem?.slug ? selectedProblem.slug.replace(/-/g, '_') : '');
+  };
+
   // update isLarge on resize
   useEffect(() => {
     const onResize = () => setIsLarge(window.innerWidth >= 1024);
@@ -236,7 +262,7 @@ Make sure inputs are appropriate for the problem and outputs are correct. For ar
         }
       );
 
-      const generatedText = response.data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+  const generatedText = response.data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
       
       // Extract JSON from the response
       const jsonMatch = generatedText.match(/\[\s*{[\s\S]*}\s*\]/);
@@ -250,8 +276,9 @@ Make sure inputs are appropriate for the problem and outputs are correct. For ar
           setSelectedProblem(updatedProblem);
         }
         
-        // Clear any previous error messages
-        setOutput('');
+  // Clear any previous error messages
+  setOutput('');
+  setIsGeneratingTests(false);
       } else {
         throw new Error('Failed to parse test cases from Gemini response');
       }
@@ -353,35 +380,65 @@ Make sure inputs are appropriate for the problem and outputs are correct. For ar
 
         for (const url of candidateUrls) {
           try {
-            // If JS and problem has examples/generated tests, wrap code in test harness
+            // If JS, wrap code in a test harness (even if tests are not yet available) so we always get meaningful output
             let submissionSource = code;
-            if (language === 'javascript' && selectedProblem && selectedProblem.examples && selectedProblem.examples.length > 0 && functionName) {
-              const tests = selectedProblem.examples.map(ex => ({ input: ex.input, expected: ex.output }));
+            if (language === 'javascript') {
+              const detectedFunctionName = extractFunctionName(code);
+              const tests = (selectedProblem && Array.isArray(selectedProblem.examples) ? selectedProblem.examples : []).map(ex => ({ input: ex.input, expected: ex.output }));
               const harness = `
 // Test harness
 function runTests(fn, tests) {
   console.log('TEST_RESULTS_START');
   const results = [];
+  if (!tests || tests.length === 0) {
+    console.log(JSON.stringify([{
+      input: 'N/A',
+      expected: 'Generated test cases',
+      result: 'No generated tests available yet. Please wait a moment and run again.',
+      error: null,
+      pass: false
+    }], null, 2));
+    console.log('TEST_RESULTS_END');
+    return;
+  }
   for (const test of tests) {
     try {
       let input = test.input;
       // Try to parse input as JSON if it looks like an array or object
       try {
-        if (input.startsWith('[') || input.startsWith('{') || input.startsWith('"')) {
-          input = JSON.parse(test.input);
+        if (typeof input === 'string') {
+          if (input.startsWith('[') || input.startsWith('{') || (input.startsWith('"') && input.endsWith('"'))) {
+            input = JSON.parse(input);
+          } else if (input.match(/^\\d+$/)) {
+            // Parse simple numbers
+            input = parseInt(input, 10);
+          }
         }
       } catch (e) {
         // Keep as string if JSON parsing fails
       }
       
       const result = fn(input);
-      const expected = test.expected;
+      let expected = test.expected;
+      
+      // Try to parse expected output
+      try {
+        if (typeof expected === 'string') {
+          if (expected.startsWith('[') || expected.startsWith('{') || (expected.startsWith('"') && expected.endsWith('"'))) {
+            expected = JSON.parse(expected);
+          } else if (expected.match(/^\\d+$/)) {
+            expected = parseInt(expected, 10);
+          }
+        }
+      } catch (e) {
+        // Keep as string if parsing fails
+      }
       
       // Compare result with expected (convert both to strings for comparison)
       const pass = JSON.stringify(result) === JSON.stringify(expected);
       results.push({
         input: test.input,
-        expected: expected,
+        expected: test.expected,
         result: result,
         pass: pass
       });
@@ -399,39 +456,149 @@ function runTests(fn, tests) {
   console.log('TEST_RESULTS_END');
 }
 
-// Debug: Check what's available in global scope
-console.log('Available functions:', Object.getOwnPropertyNames(globalThis).filter(name => typeof globalThis[name] === 'function'));
-console.log('Looking for function:', '${functionName}');
-
-// Try to run tests
+// Enhanced function detection logic
 try {
   let userFn = null;
+  const possibleNames = ['${detectedFunctionName}'];
   
-  // Try multiple ways to find the function
-  if (typeof ${functionName} === 'function') {
-    userFn = ${functionName};
-    console.log('Found function via direct reference');
-  } else if (typeof globalThis.${functionName} === 'function') {
-    userFn = globalThis.${functionName};
-    console.log('Found function via globalThis');
-  } else if (typeof window !== 'undefined' && typeof window.${functionName} === 'function') {
-    userFn = window.${functionName};
-    console.log('Found function via window');
+  // Add common variations of function names
+  const baseName = '${detectedFunctionName}'.replace(/[_-]/g, '');
+  possibleNames.push(baseName);
+  possibleNames.push(baseName.charAt(0).toLowerCase() + baseName.slice(1)); // camelCase
+  possibleNames.push(baseName.charAt(0).toUpperCase() + baseName.slice(1)); // PascalCase
+  
+  console.log('Checking for functions:', possibleNames);
+  
+  // Check global scope for functions
+  for (const name of possibleNames) {
+    if (typeof eval('typeof ' + name) === 'function') {
+      try {
+        userFn = eval(name);
+        console.log('Found function via eval:', name);
+        break;
+      } catch (e) {
+        console.log('Failed to access function:', name, e.message);
+      }
+    }
   }
   
-  if (userFn) {
-    console.log('Running tests for function:', '${functionName}');
+  // If still not found, scan global scope for any functions
+  if (!userFn) {
+    console.log('Function not found, scanning all global functions...');
+    const globalFuncs = [];
+    for (const prop in globalThis) {
+      try {
+        if (typeof globalThis[prop] === 'function' && !prop.startsWith('_') && prop.length > 2) {
+          globalFuncs.push(prop);
+        }
+      } catch (e) {
+        // Ignore properties that can't be accessed
+      }
+    }
+    console.log('Available global functions:', globalFuncs);
+    
+    // Try to find a function that looks like it might be the solution
+    const candidateFn = globalFuncs.find(name => 
+      name.toLowerCase().includes('${detectedFunctionName}'.toLowerCase().replace(/[_-]/g, '')) ||
+      '${detectedFunctionName}'.toLowerCase().includes(name.toLowerCase())
+    );
+    
+    if (candidateFn) {
+      userFn = globalThis[candidateFn];
+      console.log('Found candidate function:', candidateFn);
+    }
+  }
+  
+  if (userFn && typeof userFn === 'function') {
+    console.log('Running tests...');
     runTests(userFn, ${JSON.stringify(tests)});
   } else {
-    console.log('ERROR: Function ${functionName} not found');
-    console.log('Available functions:', Object.getOwnPropertyNames(globalThis).filter(name => typeof globalThis[name] === 'function'));
+    console.log('TEST_RESULTS_START');
+    console.log(JSON.stringify([{
+      input: 'N/A',
+      expected: 'Function found',
+      result: 'Function not found or not accessible',
+      error: 'Could not locate function "${detectedFunctionName}" in global scope. Make sure your function is defined and accessible globally.',
+      pass: false
+    }], null, 2));
+    console.log('TEST_RESULTS_END');
   }
 } catch (e) {
-  console.log('ERROR: ' + e.message);
+  console.log('TEST_RESULTS_START');
+  console.log(JSON.stringify([{
+    input: 'N/A',
+    expected: 'No errors',
+    result: 'Error during test execution',
+    error: e.message,
+    pass: false
+  }], null, 2));
+  console.log('TEST_RESULTS_END');
 }
 `;
               submissionSource = code + '\n' + harness;
-            }
+      } else if (language === 'python') {
+        const detectedFunctionName = extractFunctionName(code) || functionName || 'solution';
+        const tests = (selectedProblem && Array.isArray(selectedProblem.examples) ? selectedProblem.examples : []).map(ex => ({ input: ex.input, expected: ex.output }));
+        const pyHarness = `
+# Test harness
+import json, sys
+
+def _parse_val(val):
+  if not isinstance(val, str):
+    return val
+  v = val.strip()
+  try:
+    if (v.startswith('[') and v.endswith(']')) or (v.startswith('{') and v.endswith('}')) or (v.startswith('"') and v.endswith('"')):
+      return json.loads(v)
+    if v.isdigit():
+      return int(v)
+  except Exception:
+    pass
+  return val
+
+def _run_tests(fn, tests):
+  print('TEST_RESULTS_START')
+  results = []
+  if not tests:
+    print(json.dumps([{
+      'input': 'N/A',
+      'expected': 'Generated test cases',
+      'result': 'No generated tests available yet. Please wait and run again.',
+      'error': None,
+      'pass': False
+    }], indent=2))
+    print('TEST_RESULTS_END')
+    return
+  for t in tests:
+    try:
+      inp = _parse_val(t.get('input'))
+      expected = _parse_val(t.get('expected'))
+      res = fn(inp)
+      ok = (res == expected)
+      results.append({'input': t.get('input'), 'expected': t.get('expected'), 'result': res, 'pass': ok})
+    except Exception as e:
+      results.append({'input': t.get('input'), 'expected': t.get('expected'), 'error': str(e), 'pass': False})
+  print(json.dumps(results, indent=2))
+  print('TEST_RESULTS_END')
+
+try:
+  user_fn = globals().get('${detectedFunctionName}')
+  if user_fn is None:
+    # try common variants
+    user_fn = globals().get('${detectedFunctionName}'.lower()) or globals().get('${detectedFunctionName}'.replace('_',''))
+  if callable(user_fn):
+    _run_tests(user_fn, ${JSON.stringify(tests)})
+  else:
+    print('TEST_RESULTS_START')
+    print(json.dumps([{'input':'N/A','expected':'Function found','result':'Function not found or not accessible','error':'Could not locate function "${detectedFunctionName}" in global scope. Define it at top-level.','pass':False}], indent=2))
+    print('TEST_RESULTS_END')
+except Exception as e:
+  print('TEST_RESULTS_START')
+  print(json.dumps([{'input':'N/A','expected':'No errors','result':'Error during test execution','error':str(e),'pass':False}], indent=2))
+  print('TEST_RESULTS_END')
+`;
+        submissionSource = code + '\n' + pyHarness;
+      }
 
             const res = await axios.post(
               url,
@@ -498,7 +665,7 @@ try {
               const aliases = rt.aliases || rt.alias || [];
               return lang === pistonLang || aliases.includes?.(pistonLang);
             });
-            // runtime shape may vary; try common fields
+            // runtime shape may vary; try common fields to get a suitable version
             if (found) {
               versionToUse = found.version || (Array.isArray(found.versions) ? found.versions[0] : undefined) || (found.versions?.[0]?.version);
             }
@@ -571,11 +738,24 @@ try {
 
       // Different wrappers may nest the execution result differently; try common fields.
       const result = submissionRes.data || {};
-      // Some wrappers return the submission directly; others wrap inside `result`.
-      const exec = result; // default
-      const stdout = exec.stdout || exec.stdout_text || exec.stdout || '';
-      const stderr = exec.stderr || exec.stderr_text || exec.stderr || '';
-      const compile_output = exec.compile_output || exec.compile_output_text || '';
+      // Some wrappers return the submission directly; others wrap inside `result` or `data`.
+      let exec: any = result;
+      if ((exec.stdout == null && exec.stderr == null && exec.compile_output == null) && (result.result || result.data)) {
+        exec = result.result || result.data;
+      }
+
+      // Some wrappers indicate base64 encoding; decode if needed.
+      const isB64 = !!(exec.base64_encoded || result.base64_encoded);
+      const decodeMaybe = (val: any) => {
+        if (val == null) return '';
+        if (typeof val !== 'string') return String(val);
+        if (!isB64) return val;
+        try { return atob(val); } catch { return val; }
+      };
+
+      let stdout = decodeMaybe(exec.stdout || exec.stdout_text);
+      let stderr = decodeMaybe(exec.stderr || exec.stderr_text);
+      let compile_output = decodeMaybe(exec.compile_output || exec.compile_output_text);
 
       // If nothing standard present, show whole payload for debugging
       if (!stdout && !stderr && !compile_output) {
@@ -620,7 +800,23 @@ try {
         } else {
           // No test results found, but we have output - check if it's just empty execution
           if (exec.status?.id === 3 && !outputText.trim()) {
-            setOutput('Code executed successfully but produced no visible output. Make sure your function returns a value and is being called.');
+            if (language === 'javascript' && selectedProblem && selectedProblem.examples && selectedProblem.examples.length > 0) {
+              setOutput(`Code executed successfully but test results not found.
+
+This usually means:
+1. The function name couldn't be detected automatically
+2. Your function might not be accessible globally
+3. The function might not be called correctly
+
+Try:
+- Make sure your function is defined as: function ${extractFunctionName(code) || functionName}(...)
+- Or use: const ${extractFunctionName(code) || functionName} = function(...)
+- Avoid arrow functions wrapped in other scopes
+
+Current function name being searched: "${extractFunctionName(code) || functionName}"`);
+            } else {
+              setOutput('Code executed successfully but produced no visible output. Make sure your function returns a value and is being called.');
+            }
           } else {
             setOutput(outputText);
           }
@@ -777,6 +973,12 @@ try {
                   placeholder="Function name (for tests)"
                   className="p-2 w-48"
                 />
+                
+                {code && (
+                  <span className="text-xs text-gray-500 self-center">
+                    Detected: {extractFunctionName(code) || 'No function found'}
+                  </span>
+                )}
 
                 <Button onClick={runCode} disabled={isRunning}>
                   {isRunning ? 'Running...' : 'Run Code'}
@@ -811,12 +1013,12 @@ try {
               </Card>
 
               {output && (
-                <Card>
-                  <CardHeader>
+                <Card className="h-64 flex flex-col">
+                  <CardHeader className="flex-shrink-0">
                     <CardTitle>Output</CardTitle>
                   </CardHeader>
-                  <CardContent>
-                    <pre className="bg-black text-green-400 p-4 rounded overflow-x-auto">
+                  <CardContent className="flex-1 min-h-0 p-4">
+                    <pre className="bg-black text-green-400 p-4 rounded overflow-auto h-full text-sm whitespace-pre-wrap">
                       {output}
                     </pre>
                   </CardContent>
@@ -884,31 +1086,40 @@ try {
               </Card>
             )}
 
-            <div className="flex gap-2">
-              <select
-                value={language}
-                onChange={(e) => handleLanguageChange(e.target.value)}
-                className="p-2 border border-gray-300 rounded-md"
-              >
-                {LANGUAGES.map(lang => (
-                  <option key={lang.id} value={lang.id}>{lang.name}</option>
-                ))}
-              </select>
-              
-              <Input
-                value={functionName}
-                onChange={(e) => setFunctionName(e.target.value)}
-                placeholder="Function name (for tests)"
-                className="p-2 w-48"
-              />
+            <div className="flex flex-col gap-2">
+              <div className="flex gap-2">
+                <select
+                  value={language}
+                  onChange={(e) => handleLanguageChange(e.target.value)}
+                  className="p-2 border border-gray-300 rounded-md"
+                >
+                  {LANGUAGES.map(lang => (
+                    <option key={lang.id} value={lang.id}>{lang.name}</option>
+                  ))}
+                </select>
+                
+                <Input
+                  value={functionName}
+                  onChange={(e) => setFunctionName(e.target.value)}
+                  placeholder="Function name (for tests)"
+                  className="p-2 w-48"
+                />
 
-              <Button onClick={runCode} disabled={isRunning} className="flex-1">
-                {isRunning ? 'Running...' : 'Run Code'}
-              </Button>
+                <Button onClick={runCode} disabled={isRunning} className="flex-1">
+                  {isRunning ? 'Running...' : 'Run Code'}
+                </Button>
+              </div>
               
-              {isGeneratingTests && (
-                <span className="text-sm text-gray-500 self-center">Generating tests...</span>
-              )}
+              <div className="flex justify-between items-center">
+                {code && (
+                  <span className="text-xs text-gray-500">
+                    Detected function: {extractFunctionName(code) || 'No function found'}
+                  </span>
+                )}
+                {isGeneratingTests && (
+                  <span className="text-sm text-gray-500">Generating tests...</span>
+                )}
+              </div>
             </div>
 
             <Card>
@@ -925,12 +1136,12 @@ try {
             </Card>
 
             {output && (
-              <Card>
-                <CardHeader>
+              <Card className="h-60 flex flex-col">
+                <CardHeader className="flex-shrink-0">
                   <CardTitle>Output</CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <pre className="bg-black text-green-400 p-4 rounded overflow-x-auto">{output}</pre>
+                <CardContent className="flex-1 min-h-0 p-4">
+                  <pre className="bg-black text-green-400 p-4 rounded overflow-auto h-full text-sm whitespace-pre-wrap">{output}</pre>
                 </CardContent>
               </Card>
             )}
