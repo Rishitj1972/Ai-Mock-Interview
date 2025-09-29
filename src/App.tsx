@@ -14,6 +14,7 @@ import CVReviewPage from "@/routes/cv-review";
 import CodeEditorPage from "@/routes/code-editor";
 import MockLoadPage from "@/routes/mock-load-page";
 import MockInterviewPage from "@/routes/mock-interview-page";
+import { Feedback } from "@/routes/feedback";
 
 const App = () => {
  return (
@@ -43,6 +44,7 @@ const App = () => {
   {/* Mock interview flow */}
   <Route path="interview/:interviewId" element={<MockLoadPage/>}/>
   <Route path="interview/:interviewId/start" element={<MockInterviewPage/>}/>
+  <Route path="feedback/:interviewId" element={<Feedback/>}/>
       </Route>
       <Route path="cv-review" element={<CVReviewPage/>}/>
       <Route path="code-editor" element={<CodeEditorPage/>}/>

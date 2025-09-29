@@ -42,9 +42,9 @@ const RecordAnswer = ({question} : RecordAnswerProps) => {
      if(isRecording) {
         stopSpeechToText();
 
-        if(userAnswer.length < 20) {
+        if(userAnswer.length < 5) {
             toast.error("Error",{
-                description: "Your answer should be more than 20 characters",
+                description: "Your answer should be more than 5 characters",
             })
             return;
         }
@@ -118,13 +118,22 @@ const RecordAnswer = ({question} : RecordAnswerProps) => {
   }
 
 //   to store the ai result
+  // useEffect(() => {
+  //   setUserAnswer('');
+  //   const combineTranscripts = results.filter((result) : result is ResultType => typeof result  !== "string" )
+  //   .map(result => result.transcript).join(" ");
+
+  //   setUserAnswer(combineTranscripts);
+  // },[results]);        
 
   useEffect(() => {
-    const combineTranscripts = results.filter((result) : result is ResultType => typeof result  !== "string" )
-    .map(result => result.transcript).join(" ");
-
-    setUserAnswer(combineTranscripts);
-  },[results]);        
+    if (results.length > 0) {
+      const lastResult = results[results.length - 1];
+      if (typeof lastResult !== "string") {
+        setUserAnswer(lastResult.transcript);
+      }
+    }
+  }, [results]); 
 
   return (<>
     <div className='w-full flex flex-row items-center justify-center gap-8 mt-4'>
