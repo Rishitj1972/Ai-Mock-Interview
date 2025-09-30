@@ -1,23 +1,26 @@
 import { useAuth } from '@clerk/clerk-react';
 import { useEffect, useState } from 'react';
-import useSpeechToText, { type ResultType }  from 'react-hook-speech-to-text';
+import useSpeechToText, { type ResultType } from 'react-hook-speech-to-text';
 import { useParams } from 'react-router';
 import { TooltipButton } from './tooltip-button';
 import { CircleStop, Loader, Mic, RefreshCw, Save } from 'lucide-react';
 import { toast } from 'sonner';
 import { chatSession } from '@/scripts';
+import { SaveModal } from './save_modal';
+import { query, collection, where, getDocs, addDoc } from 'firebase/firestore';
+import { db } from '@/config/firebase.config';
 
 interface RecordAnswerProps {
-    question : {question: string; answer: string};
+  question: { question: string; answer: string };
 }
 
 interface AIResponse {
-    rating : number;
-    feedback: string;
+  rating: number;
+  feedback: string;
 }
 
-const RecordAnswer = ({question} : RecordAnswerProps) => {
-     const {
+const RecordAnswer = ({ question }: RecordAnswerProps) => {
+  const {
     error,
     interimResult,
     isRecording,
@@ -26,49 +29,47 @@ const RecordAnswer = ({question} : RecordAnswerProps) => {
     stopSpeechToText,
   } = useSpeechToText({
     continuous: true,
-    useLegacyResults: false
+    useLegacyResults: false,
   });
 
-  const [userAnswer, setUserAnswer] = useState("");
-  const [isAiGenerating,setIsAiGenerating] = useState(false);
+  const [userAnswer, setUserAnswer] = useState('');
+  const [isAiGenerating, setIsAiGenerating] = useState(false);
   const [aiResult, setAiResult] = useState<AIResponse | null>(null);
-  const [open,setOpen] = useState(false);
-  const [loading,setLoading] = useState(false);
+  const [open, setOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const { userId } = useAuth();
   const { interviewId } = useParams();
 
-  const recordUserAnswer = async  () => {
-     if(isRecording) {
-        stopSpeechToText();
+  const recordUserAnswer = async () => {
+    if (isRecording) {
+      stopSpeechToText();
 
-        if(userAnswer.length < 5) {
-            toast.error("Error",{
-                description: "Your answer should be more than 5 characters",
-            })
-            return;
-        }
-        // ai result
-        const aiResult = await generateResult(
-            question.question,
-            question.answer,
-            userAnswer
-        );
-        setAiResult(aiResult);
-        console.log("AI Feedback:", aiResult);
-        console.log("USer Answer : ",userAnswer);
-     } else {
-        startSpeechToText();
-     }
+      if (userAnswer.length < 5) {
+        toast.error('Error', {
+          description: 'Your answer should be more than 5 characters',
+        });
+        return;
+      }
+
+      const aiResult = await generateResult(
+        question.question,
+        question.answer,
+        userAnswer
+      );
+      setAiResult(aiResult);
+      console.log('AI Feedback:', aiResult);
+      console.log('User Answer:', userAnswer);
+    } else {
+      startSpeechToText();
+    }
   };
 
   const cleanJsonResponse = (responseText: string) => {
-    // trim any surrounding whitespaces
     let cleanText = responseText.trim();
-
-    cleanText = cleanText.replace(/```json|```|json |'''|'/g, "");
+    cleanText = cleanText.replace(/```json|```|json|'''|'/g, '');
     cleanText = cleanText.trim();
-     
+
     try {
       return JSON.parse(cleanText);
     } catch (error) {
@@ -78,110 +79,153 @@ const RecordAnswer = ({question} : RecordAnswerProps) => {
     }
   };
 
-//  this will generate result
   const generateResult = async (
-    qst : string,
-    qstAns : string,
-    userAns : string
-  ) : Promise<AIResponse> => {
+    qst: string,
+    qstAns: string,
+    userAns: string
+  ): Promise<AIResponse> => {
     setIsAiGenerating(true);
     const prompt = `
-    Question: "${qst}""
+    Question: "${qst}"
     User Answer: "${userAns}"
     Correct Answer: "${qstAns}"
-    Please compare the user's answer to the correct answer, ans provide a rating( from 1 to 10 ) based on 
-    answer quality,and offer feedback for improvement. Return the result in JSON format with the fields "ratings" 
-    (number) and "feedback" string.`;
+    Please compare the user's answer to the correct answer, and provide a rating (from 1 to 10) based on 
+    answer quality, and offer feedback for improvement. Return the result in JSON format with the fields "rating" 
+    (number) and "feedback" (string).`;
 
     try {
-        const aiResult = await chatSession.sendMessage(prompt);
-        const parsedResult : AIResponse = cleanJsonResponse(
-            aiResult.response.text()
-        );
-        return parsedResult;
-
+      const aiResult = await chatSession.sendMessage(prompt);
+      const parsedResult: AIResponse = cleanJsonResponse(
+        await aiResult.response.text()
+      );
+      return parsedResult;
     } catch (error) {
-        console.log(error);
-        toast("Error",{
-            description: "An error occurred while generating feedback.",
-        });
-        return { rating: 0, feedback: "Unable to generate feedback"};
+      console.log(error);
+      toast('Error', {
+        description: 'An error occurred while generating feedback.',
+      });
+      return { rating: 0, feedback: 'Unable to generate feedback' };
     } finally {
-        setIsAiGenerating(false);
+      setIsAiGenerating(false);
     }
-  }
+  };
 
   const recordNewAnswer = () => {
-    setUserAnswer("");
+    setUserAnswer('');
     stopSpeechToText();
     startSpeechToText();
-  }
+  };
 
-//   to store the ai result
-  // useEffect(() => {
-  //   setUserAnswer('');
-  //   const combineTranscripts = results.filter((result) : result is ResultType => typeof result  !== "string" )
-  //   .map(result => result.transcript).join(" ");
+  const saveUserAnswer = async () => {
+    setLoading(true);
+    try {
+      const userAnswerQuery = query(
+        collection(db, 'userAnswers'),
+        where('userId', '==', userId),
+        where('interviewId', '==', interviewId),
+        where('question', '==', question.question)
+      );
+      const querySnap = await getDocs(userAnswerQuery);
 
-  //   setUserAnswer(combineTranscripts);
-  // },[results]);        
+      if (!querySnap.empty) {
+        toast.error(
+          'You have already answered this question. You cannot save multiple answers for the same question.'
+        );
+        return;
+      } else {
+        await addDoc(collection(db, 'userAnswers'), {
+          mockIdRef: interviewId,
+          question: question.question,
+          correct_ans: question.answer,
+          user_ans: userAnswer,
+          Feedback: aiResult?.feedback,
+          rating: aiResult?.rating,
+          userId: userId,
+          createdAt: new Date(),
+        });
+        toast.success('Your answer has been saved successfully.');
+      }
+      setUserAnswer('');
+      stopSpeechToText();
+    } catch (error) {
+      console.log(error);
+      toast.error(
+        'An error occurred while saving your answer. Please try again.'
+      );
+    } finally {
+      setLoading(false);
+      setOpen(false);
+    }
+  };
 
   useEffect(() => {
     if (results.length > 0) {
       const lastResult = results[results.length - 1];
-      if (typeof lastResult !== "string") {
+      if (typeof lastResult !== 'string') {
         setUserAnswer(lastResult.transcript);
       }
     }
-  }, [results]); 
+  }, [results]);
 
-  return (<>
-    <div className='w-full flex flex-row items-center justify-center gap-8 mt-4'>
-        <TooltipButton
-        content={isRecording ? "Stop Recording" : "Start Recording"}
-        icon={
-            isRecording ? (
-                <CircleStop className='min-w-5 min-h-5'/>
-            ) : (<Mic className='min-w-5 min-h-5'/>)
-        }
-        onClick={recordUserAnswer}
+  return (
+    <>
+      <div className="w-full flex flex-row items-center justify-center gap-8 mt-4">
+        <SaveModal
+          isOpen={open}
+          onClose={() => setOpen(false)}
+          onConfirm={saveUserAnswer}
+          loading={loading}
         />
-        <TooltipButton 
-        content='Record Again'
-        icon={<RefreshCw className='min-w-5 min-h-5' />}
-        onClick={recordNewAnswer}
-        />
-        <TooltipButton
-        content='Save Result'
-        icon={
-            isAiGenerating ? (
-                <Loader className='min-w-5 min-h-5 animate-spin'/>
-            ) : (
-                <Save className='min-w-5 min-h-5'/>
-            )
-        }
-        onClick={() => setOpen(!open)}
-        disbaled={!aiResult}
-        />
-    </div>
-    <div className='w-full mt-14 p-4 border rounded-md bg-gray-50'>
-        <h2 className='text-lg font-semibold'>Your Answer:</h2>
-        <textarea
-          className='text-sm mt-2 text-gray-700 whitespace-normal w-full p-2 rounded border '
-          value={userAnswer}
-          onChange={e => setUserAnswer(e.target.value)}
-          rows={4}
-          placeholder='Start recording to see your answer or edit here...'
-        />
-        {interimResult && (
-            <p className='text-sm text-gray-500 mt-2'>
-                <strong>Current Speech:</strong>
-                {interimResult}
+
+        <div className="w-full flex flex-row items-center justify-center gap-8 mt-4">
+          <TooltipButton
+            content={isRecording ? 'Stop Recording' : 'Start Recording'}
+            icon={
+              isRecording ? (
+                <CircleStop className="min-w-5 min-h-5" />
+              ) : (
+                <Mic className="min-w-5 min-h-5" />
+              )
+            }
+            onClick={recordUserAnswer}
+          />
+          <TooltipButton
+            content="Record Again"
+            icon={<RefreshCw className="min-w-5 min-h-5" />}
+            onClick={recordNewAnswer}
+          />
+          <TooltipButton
+            content="Save Result"
+            icon={
+              isAiGenerating ? (
+                <Loader className="min-w-5 min-h-5 animate-spin" />
+              ) : (
+                <Save className="min-w-5 min-h-5" />
+              )
+            }
+            onClick={() => setOpen(!open)}
+            disbaled={!aiResult}
+          />
+        </div>
+        <div className="w-full mt-14 p-4 border rounded-md bg-gray-50">
+          <h2 className="text-lg font-semibold">Your Answer:</h2>
+          <textarea
+            className="text-sm mt-2 text-gray-700 whitespace-normal w-full p-2 rounded border "
+            value={userAnswer}
+            onChange={(e) => setUserAnswer(e.target.value)}
+            rows={4}
+            placeholder="Start recording to see your answer or edit here..."
+          />
+          {interimResult && (
+            <p className="text-sm text-gray-500 mt-2">
+              <strong>Current Speech:</strong>
+              {interimResult}
             </p>
-        )}
-    </div>
+          )}
+        </div>
+      </div>
     </>
-  )
-}
+  );
+};
 
-export default RecordAnswer
+export default RecordAnswer;

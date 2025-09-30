@@ -17,14 +17,14 @@ import {
   } from "@/components/ui/accordion"
 
   /**
- * Feedback Component - Displays interview feedback and performance summary
- * Shows detailed feedback for each question in an accordion format
+ * Feedback Component - Displays interview Feedback and performance summary
+ * Shows detailed Feedback for each question in an accordion format
  */
 export const Feedback = () => {
     const { interviewId } = useParams<{ interviewId: string }>();
     const [interview, setInterview] = useState<Interview | null>(null);
     const [isLoading, setIsLoading] = useState(false);
-    const [feedback, setFeedback] = useState<UserAnswer[]>([]); 
+    const [Feedback, setFeedback] = useState<UserAnswer[]>([]); 
     const [activeFeed, setActiveFeed] = useState("");
     const { userId } = useAuth();
     const navigate = useNavigate();
@@ -33,7 +33,7 @@ export const Feedback = () => {
         navigate("/generate", { replace: true });
     }
     /**
-     * useEffect hook to fetch interview and feedback data when component mounts
+     * useEffect hook to fetch interview and Feedback data when component mounts
      * Runs when interviewId, navigate, or userId changes
      */
     useEffect(() => {
@@ -66,10 +66,10 @@ export const Feedback = () => {
                         ...doc.data(),
                     } as UserAnswer));
 
-                    // Update feedback state with fetched data
+                    // Update Feedback state with fetched data
                     setFeedback(interviewData);
                 } catch (error) {
-                    console.log("Error fetching feedback:", error);
+                    console.log("Error fetching Feedback:", error);
                 } finally {
                     setIsLoading(false);
                 }
@@ -81,15 +81,15 @@ export const Feedback = () => {
     }, [interviewId, navigate, userId]);
     /**
      * Memoized calculation of overall rating
-     * Calculates average rating from all feedback items
-     * Returns 0.0 if no feedback exists
+     * Calculates average rating from all Feedback items
+     * Returns 0.0 if no Feedback exists
      */
     const overAllRating = useMemo(() => {
-        if (feedback.length === 0) return 0.0;
-        const totalRating = feedback.reduce(
+        if (Feedback.length === 0) return 0.0;
+        const totalRating = Feedback.reduce(
             (acc, curr) => acc + curr.rating, 0);
-        return (totalRating / feedback.length).toFixed(1);
-    }, [feedback]);
+        return (totalRating / Feedback.length).toFixed(1);
+    }, [Feedback]);
 
     if (isLoading) {
         return <LoaderPage className="w-full h-[70vh]" />;
@@ -109,7 +109,7 @@ export const Feedback = () => {
         </div>
         <Headings
             title='Feedback Summary'
-            description='Detailed feedback on your interview performance'
+            description='Detailed Feedback on your interview performance'
         />
         <div className='grid grid-cols-1 md:grid-cols-3 gap-4'>
             <span className='bg-white/50 border border-gray-200 p-4 rounded-lg flex flex-col gap-2'>
@@ -119,9 +119,9 @@ export const Feedback = () => {
         {interview && <InterviewPin interview={interview} onMockPage />}
         
         <Headings title="Interview Feedback" isSubheading/>
-        {feedback && ( 
+        {Feedback && ( 
             <Accordion type="single" collapsible className="w-full">
-                {feedback.map((feed) => ( 
+                {Feedback.map((feed) => ( 
                     <AccordionItem 
                         key={feed.id} 
                         value={feed.id}
@@ -132,16 +132,26 @@ export const Feedback = () => {
                             className='bg-gray-100 hover:bg-gray-200'
                         >
                             {/* Add content for the trigger */}
-                            Question {feedback.indexOf(feed) + 1}
+                            Question {Feedback.indexOf(feed) + 1}
                         </AccordionTrigger>
                         <AccordionContent>
-                            {/* Add content for the accordion body */}
-                            
-                            <div className="p-4">
-                                <p><strong>Question:</strong> {feed.question}</p>
-                                <p><strong>Your Answer:</strong> {feed.user_ans}</p>
-                                <p><strong>Feedback:</strong> {feed.feedback}</p>
-                                <p><strong>Rating:</strong> {feed.rating}/10</p>
+                            <div className="p-4 bg-gray-50 rounded-lg shadow-md">
+                                <div className="mb-4">
+                                    <p className="text-sm text-gray-500 font-medium">Question:</p>
+                                    <p className="text-base text-gray-800 font-semibold">{feed.question}</p>
+                                </div>
+                                <div className="mb-4">
+                                    <p className="text-sm text-gray-500 font-medium">Your Answer:</p>
+                                    <p className="text-base text-gray-800">{feed.user_ans || "No answer provided"}</p>
+                                </div>
+                                <div className="mb-4">
+                                    <p className="text-sm text-gray-500 font-medium">Feedback:</p>
+                                    <p className="text-base text-gray-800">{feed.feedback || "No feedback available"}</p>
+                                </div>
+                                <div>
+                                    <p className="text-sm text-gray-500 font-medium">Rating:</p>
+                                    <p className="text-base text-gray-800 font-bold">{feed.rating || "N/A"}/10</p>
+                                </div>
                             </div>
                         </AccordionContent>
                     </AccordionItem>
