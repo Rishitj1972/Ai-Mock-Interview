@@ -6,7 +6,7 @@ const LogoContainer = () => {
         <img 
         src="/assets/svg/logo2.png" 
         alt="logo" 
-        className="w-25 h-12 object-contain"
+        className="w-40 h-20 object-contain"
         />
         
     </Link>
