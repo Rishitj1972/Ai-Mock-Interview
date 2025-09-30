@@ -146,7 +146,7 @@ export const Feedback = () => {
                                 </div>
                                 <div className="mb-4">
                                     <p className="text-sm text-gray-500 font-medium">Feedback:</p>
-                                    <p className="text-base text-gray-800">{feed.feedback || "No feedback available"}</p>
+                                    <p className="text-base text-gray-800">{feed.Feedback || "No feedback available"}</p>
                                 </div>
                                 <div>
                                     <p className="text-sm text-gray-500 font-medium">Rating:</p>
