@@ -250,7 +250,7 @@ Please respond with ONLY a JSON array in this exact format:
 Make sure inputs are appropriate for the problem and outputs are correct. For array inputs, use proper array notation.`;
 
       const response = await axios.post(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`,
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`,
         {
           contents: [{
             parts: [{ text: prompt }]
