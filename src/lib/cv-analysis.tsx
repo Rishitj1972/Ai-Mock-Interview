@@ -10,7 +10,7 @@ export async function analyzeCVWithGemini(cvText: string) {
       throw new Error("The uploaded file doesn't appear to be a CV/Resume. Please upload a valid CV document.");
     }
 
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
     
     const prompt = `
     You are an expert HR professional and CV reviewer. Analyze the following CV/Resume and provide a comprehensive review.
@@ -73,7 +73,7 @@ export async function analyzeCVWithGemini(cvText: string) {
 // Function to validate if the content is actually a CV
 async function validateIfCV(text: string): Promise<boolean> {
   try {
-    const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
     
     const validationPrompt = `
     Analyze the following text and determine if it's a CV/Resume or not.
