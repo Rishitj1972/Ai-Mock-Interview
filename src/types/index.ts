@@ -31,7 +31,7 @@ export interface UserAnswer {
     question: string;
     correct_ans: string;
     user_ans: string;
-    feedback: string;
+    Feedback: string;
     rating: number;
     userId: string;
     createdAt: Timestamp ;
