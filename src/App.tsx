@@ -14,7 +14,7 @@ import CVReviewPage from "@/routes/cv-review";
 import CodeEditorPage from "@/routes/code-editor";
 import MockLoadPage from "@/routes/mock-load-page";
 import MockInterviewPage from "@/routes/mock-interview-page";
-import { Feedback } from "@/routes/Feedback";
+import { Feedback } from "@/routes/feedback";
 
 const App = () => {
  return (
