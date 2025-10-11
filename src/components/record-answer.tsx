@@ -1,9 +1,9 @@
 import { useAuth } from '@clerk/clerk-react';
 import { useEffect, useState } from 'react';
 import useSpeechToText, { type ResultType } from 'react-hook-speech-to-text';
-import { useParams } from 'react-router';
+import {  useParams } from 'react-router';
 import { TooltipButton } from './tooltip-button';
-import { CircleStop, Loader, Mic, RefreshCw, Save } from 'lucide-react';
+import { CircleStop, Loader, Mic, RefreshCw, Save, Sparkle } from 'lucide-react';
 import { toast } from 'sonner';
 import { chatSession } from '@/scripts';
 import { SaveModal } from './save_modal';
@@ -162,7 +162,8 @@ const RecordAnswer = ({ question }: RecordAnswerProps) => {
     if (results.length > 0) {
       const lastResult = results[results.length - 1];
       if (typeof lastResult !== 'string') {
-        setUserAnswer(lastResult.transcript);
+        // setUserAnswer(lastResult.transcript);
+        setUserAnswer(prev => `${prev} ${lastResult.transcript}`.trim());
       }
     }
   }, [results]);
@@ -222,7 +223,7 @@ const RecordAnswer = ({ question }: RecordAnswerProps) => {
               {interimResult}
             </p>
           )}
-        </div>
+        </div> 
       </div>
     </>
   );

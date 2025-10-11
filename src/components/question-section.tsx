@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { cn } from "@/lib/utils";
 import { TooltipButton } from "./tooltip-button";
-import { Volume2, VolumeX } from "lucide-react";
+import { Sparkle, Volume2, VolumeX } from "lucide-react";
 import RecordAnswer from "./record-answer";
 
 interface QuestionSectionProps {
@@ -76,8 +76,8 @@ export const QuestionSection = ({ questions }: QuestionSectionProps) => {
                         onClick={() => handlePlayQuestion(tab.question)}
                         />
                     </div>
-
                     {/* Option to record the answer */}
+                    
                     <RecordAnswer 
                     question={tab}
                     />

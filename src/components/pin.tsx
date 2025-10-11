@@ -29,7 +29,11 @@ const InterviewPin = ({ interview, onMockPage = false }: InterviewPinProps) => {
   const onDelete = async () => {};
 
   return (
-    <Card className="p-4 rounded-md shadow-none hover:shadow-md shadow-gray-100 cursor-pointer transition-all space-y-4">
+    <Card className="p-4 rounded-md shadow-none hover:shadow-md shadow-gray-100 cursor-pointer transition-all space-y-4"
+          onClick={() => {
+            navigate(`/generate/interview/${interview?.id}`,{ replace : true});
+            }}
+    >
       <CardTitle className="text-lg">{interview?.position}</CardTitle>
 
       <CardDescription>{interview?.description}</CardDescription>
@@ -88,7 +92,7 @@ const InterviewPin = ({ interview, onMockPage = false }: InterviewPinProps) => {
                 loading={false}
                 />
 
-                <TooltipButton
+                {/* <TooltipButton
                 content="Start"
                 buttonVariant={"ghost"}
                 onClick={() => {
@@ -98,7 +102,7 @@ const InterviewPin = ({ interview, onMockPage = false }: InterviewPinProps) => {
                 buttonClassName="hover:text-sky-500"
                 icon={<Sparkles/>}
                 loading={false}
-                />
+                /> */}
 
                 
             </div>

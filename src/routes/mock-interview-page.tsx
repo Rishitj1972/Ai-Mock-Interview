@@ -2,12 +2,13 @@ import { db } from "@/config/firebase.config";
 import type { Interview } from "@/types";
 import { doc, getDoc } from "firebase/firestore";
 import { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router";
+import { Link, useNavigate, useParams } from "react-router";
 import LoaderPage from "./loader-page";
 import CustomBreadCrumb from "@/components/custom-bread-crumb";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { Lightbulb } from "lucide-react";
+import { Lightbulb, Sparkle } from "lucide-react";
 import  { QuestionSection } from "@/components/question-section";
+import { Button } from "@/components/ui/button";
 
 const MockInterviewPage = () => {
   const { interviewId } = useParams<{ interviewId: string }>();
@@ -56,8 +57,8 @@ const MockInterviewPage = () => {
         breadCrumbItems={[{label : "Mock Interview" , link : "/generate"},{label : interview?.position || "" , link : `/generate/${interview?.id}`}]}
         /> 
 
-    <div className="w-full ">
-        <Alert className="bg-indigo-100/50 border-indigo-200 p-4 rounded-lg flex items-start gap-3 -mt-3">
+    <div className="w-full " style={{display : "flex", flexDirection : "column", gap : "15px" , alignItems : "end"}}>
+        <Alert className="bg-indigo-100/50 border-indigo-200 p-4 rounded-lg flex items-start gap-3 -mt-2">
         <Lightbulb className="h-5 w-5 text-indigo-600" />
         <div>
           <AlertTitle className="text-indigo-800 font-semibold">
@@ -70,6 +71,11 @@ const MockInterviewPage = () => {
           </AlertDescription>
         </div>
       </Alert>
+      <Link to={`/generate/`}>
+            <Button size={"sm"} >
+                End <Sparkle/>
+            </Button>
+      </Link>
     </div>
     {interview?.questions && interview?.questions.length > 0 && (
         <div className="mt-4 w-full flex flex-col items-start gap-4">
