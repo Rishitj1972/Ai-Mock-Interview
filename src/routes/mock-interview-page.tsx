@@ -18,6 +18,44 @@ const MockInterviewPage = () => {
 
   const navigate = useNavigate();
 
+
+  // timer login start ----------------------------------------------------------------
+
+  const TOTAL_TIME = 900; // 5 mins
+
+// Initialize timer from localStorage if available
+const [timeLeft, setTimeLeft] = useState(() => {
+  const saved = localStorage.getItem(`timer_${interviewId}`);
+  return saved ? Number(saved) : TOTAL_TIME;
+});
+
+useEffect(() => {
+  const interval = setInterval(() => {
+    setTimeLeft((prev) => {
+      if (prev <= 1) {
+        clearInterval(interval);
+        localStorage.removeItem(`timer_${interviewId}`);
+        navigate("/generate", { replace: true });
+        return 0;
+      }
+      const updated = prev - 1;
+      localStorage.setItem(`timer_${interviewId}`, updated.toString()); // ✅ Save progress
+      return updated;
+    });
+  }, 1000);
+
+  return () => clearInterval(interval);
+}, [navigate, interviewId]);
+
+
+const handleEnd = () => {
+  localStorage.removeItem(`timer_${interviewId}`); // clear saved timer
+  navigate("/generate", { replace: true });        // exit
+};
+
+
+  // timer logic end ---------------------------------------------------------------------
+
  useEffect(() => {
     const fetchInterview = async () => {
       try {
@@ -58,6 +96,11 @@ const MockInterviewPage = () => {
         /> 
 
     <div className="w-full " style={{display : "flex", flexDirection : "column", gap : "15px" , alignItems : "end"}}>
+
+         <div className="text-lg font-medium text-gray-700 bg-gray-100 px-3 py-1 rounded-md">
+          ⏳ Time Left: {Math.floor(timeLeft / 60)}:{String(timeLeft % 60).padStart(2, "0")}
+        </div>
+
         <Alert className="bg-indigo-100/50 border-indigo-200 p-4 rounded-lg flex items-start gap-3 -mt-2">
         <Lightbulb className="h-5 w-5 text-indigo-600" />
         <div>
@@ -72,7 +115,9 @@ const MockInterviewPage = () => {
         </div>
       </Alert>
       <Link to={`/generate/`}>
-            <Button size={"sm"} >
+            <Button size={"sm"} 
+              onClick={handleEnd}
+            >
                 End <Sparkle/>
             </Button>
       </Link>
