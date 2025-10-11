@@ -1,6 +1,11 @@
 # React + TypeScript + Vite
 
 ```
+Domain :- ai-mock-interview-red-nine.vercel.app
+
+```
+
+```
 npm install
 
 Add the .env.local file including clerk, firebase and google gemini configuration settings.
