@@ -71,7 +71,8 @@ const InterviewPin = ({ interview, onMockPage = false }: InterviewPinProps) => {
                 <TooltipButton
                 content="View"
                 buttonVariant={"ghost"}
-                onClick={() => {
+                onClick={(e) => {
+                    e.stopPropagation();
                     navigate(`/generate/${interview?.id}`,{ replace : true});
                 }}
                 disbaled={false}
@@ -83,7 +84,8 @@ const InterviewPin = ({ interview, onMockPage = false }: InterviewPinProps) => {
                 <TooltipButton
                 content="Feedback"
                 buttonVariant={"ghost"}
-                onClick={() => {
+                onClick={(e) => {
+                    e.stopPropagation();
                     navigate(`/generate/feedback/${interview?.id}`,{ replace : true});
                 }}
                 disbaled={false}
