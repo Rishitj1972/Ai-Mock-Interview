@@ -37,3 +37,5 @@ export interface UserAnswer {
     createdAt: Timestamp ;
     updatedAt: Timestamp ;
 }
+
+export type { JobRole, CVAnalysisResult, RoleBasedCVAnalysisResult } from '@/lib/cv-analysis';
