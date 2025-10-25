@@ -17,12 +17,12 @@ export interface CVAnalysisResult {
 }
 
 export interface RoleBasedCVAnalysisResult extends CVAnalysisResult {
-  roleAlignment: {
+  roleAlignment?: {
     matchPercentage: number;
     missingSkills: string[];
     recommendedSections: string[];
   };
-  industryInsights: {
+  industryInsights?: {
     salaryRange?: string;
     demandLevel: 'High' | 'Medium' | 'Low';
     trendingSkills: string[];

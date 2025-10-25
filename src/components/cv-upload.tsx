@@ -7,13 +7,13 @@ import { extractTextFromFile } from '@/lib/file-processor';
 import CVReviewResults from './cv-review-results';
 import JobRoleSelector from './job-role-selector';
 
-interface CVUploadSectionProps {
-  uploadedFile: File | null;
-  setUploadedFile: (file: File | null) => void;
-  isAnalyzing: boolean;
-  setIsAnalyzing: (analyzing: boolean) => void;
-  setReviewResults: (results: any) => void;
-}
+// interface CVUploadSectionProps {
+//   uploadedFile: File | null;
+//   setUploadedFile: (file: File | null) => void;
+//   isAnalyzing: boolean;
+//   setIsAnalyzing: (analyzing: boolean) => void;
+//   setReviewResults: (results: any) => void;
+// }
 
 export default function CVReview() {
   const [selectedRole, setSelectedRole] = useState<JobRole | undefined>();

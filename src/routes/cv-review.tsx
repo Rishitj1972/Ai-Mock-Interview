@@ -1,24 +1,25 @@
-import { useState } from 'react';
-import CVReviewResults from '@/components/cv-review-results';
+// import { useState } from 'react';
+// import CVReviewResults from '@/components/cv-review-results';
+import CVReview from '@/components/cv-upload';
 import CVUploadSection from '@/components/cv-upload';
-import { Button } from '@/components/ui/button';
-import { ArrowLeft } from 'lucide-react';
+// import { Button } from '@/components/ui/button';
+// import { ArrowLeft } from 'lucide-react';
 
 export default function CVReviewPage() {
-  const [uploadedFile, setUploadedFile] = useState<File | null>(null);
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [reviewResults, setReviewResults] = useState<{
-    score: number;
-    strengths: string[];
-    improvements: string[];
-    suggestions: string[];
-  } | null>(null);
+  // const [uploadedFile, setUploadedFile] = useState<File | null>(null);
+  // const [isAnalyzing, setIsAnalyzing] = useState(false);
+  // const [reviewResults, setReviewResults] = useState<{
+  //   score: number;
+  //   strengths: string[];
+  //   improvements: string[];
+  //   suggestions: string[];
+  // } | null>(null);
 
-  const handleStartOver = () => {
-    setReviewResults(null);
-    setUploadedFile(null);
-    setIsAnalyzing(false);
-  };
+  // const handleStartOver = () => {
+  //   setReviewResults(null);
+  //   setUploadedFile(null);
+  //   setIsAnalyzing(false);
+  // };
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -32,7 +33,7 @@ export default function CVReviewPage() {
         </div>
 
         {/* Conditional Rendering */}
-        {!reviewResults ? (
+        {/* {!reviewResults ? (
           // Show Upload Section when no results
           <CVUploadSection 
             uploadedFile={uploadedFile}
@@ -41,11 +42,11 @@ export default function CVReviewPage() {
             setIsAnalyzing={setIsAnalyzing}
             setReviewResults={setReviewResults}
           />
-        ) : (
-          // Show Results Section when analysis is complete
-          <div className="space-y-6">
-            {/* Back Button */}
-            <div className="flex justify-between items-center">
+        ) : ( */}
+           {/* Show Results Section when analysis is complete */}
+          {/* <div className="space-y-6">
+            Back Button */}
+            {/* <div className="flex justify-between items-center">
               <Button 
                 variant="outline" 
                 onClick={handleStartOver}
@@ -58,13 +59,14 @@ export default function CVReviewPage() {
               <div className="text-sm text-muted-foreground">
                 File: {uploadedFile?.name}
               </div>
-            </div>
+            </div> */}
 
             {/* Results Component */}
-            <CVReviewResults results={reviewResults} />
+            {/* <CVReviewResults results={reviewResults} /> */}
+            <CVReview />
           </div>
-        )}
+        {/* )} */}
       </div>
-    </div>
+    // </div>
   );
 }
